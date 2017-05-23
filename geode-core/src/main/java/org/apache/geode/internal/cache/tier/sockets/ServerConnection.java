@@ -954,9 +954,7 @@ public class ServerConnection implements Runnable {
         InputStream inputStream = socket.getInputStream();
         OutputStream outputStream = socket.getOutputStream();
         // TODO serialization types?
-        newClientProtocol.receiveMessage(inputStream, outputStream,
-            SerializationType.STRING.deserializer, SerializationType.STRING.serializer,
-            this.getCache());
+        newClientProtocol.receiveMessage(inputStream, outputStream, this.getCache());
       } catch (IOException e) {
         // TODO?
       }
