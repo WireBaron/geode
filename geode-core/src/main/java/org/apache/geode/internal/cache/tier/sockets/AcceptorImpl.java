@@ -97,7 +97,7 @@ import org.apache.geode.internal.util.ArrayUtils;
 /**
  * Implements the acceptor thread on the bridge server. Accepts connections from the edge and starts
  * up threads to process requests from these.
- * 
+ *
  * @since GemFire 2.0.2
  */
 @SuppressWarnings("deprecation")
@@ -116,19 +116,29 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    */
   private final ThreadPoolExecutor hsPool;
 
-  /** The port on which this acceptor listens for client connections */
+  /**
+   * The port on which this acceptor listens for client connections
+   */
   private final int localPort;
 
-  /** The server socket that handles requests for connections */
+  /**
+   * The server socket that handles requests for connections
+   */
   private ServerSocket serverSock = null;
 
-  /** The GemFire cache served up by this acceptor */
+  /**
+   * The GemFire cache served up by this acceptor
+   */
   protected final InternalCache cache;
 
-  /** Caches region information */
+  /**
+   * Caches region information
+   */
   private final CachedRegionHelper crHelper;
 
-  /** A lock to prevent close from occurring while creating a ServerConnection */
+  /**
+   * A lock to prevent close from occurring while creating a ServerConnection
+   */
   private final Object syncLock = new Object();
 
   /**
@@ -168,9 +178,11 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    */
   public static final int DEFAULT_HANDSHAKE_TIMEOUT_MS = 59000;
 
-  /** Test value for handshake timeout */
+  /**
+   * Test value for handshake timeout
+   */
   protected static final int handShakeTimeout =
-      Integer.getInteger(HANDSHAKE_TIMEOUT_PROPERTY_NAME, DEFAULT_HANDSHAKE_TIMEOUT_MS).intValue();
+    Integer.getInteger(HANDSHAKE_TIMEOUT_PROPERTY_NAME, DEFAULT_HANDSHAKE_TIMEOUT_MS).intValue();
 
   /**
    * The name of a system property that sets the accept timeout (in milliseconds). This is how long
@@ -183,17 +195,25 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    */
   public static final int DEFAULT_ACCEPT_TIMEOUT_MS = 9900;
 
-  /** Test value for accept timeout */
+  /**
+   * Test value for accept timeout
+   */
   private final int acceptTimeout =
-      Integer.getInteger(ACCEPT_TIMEOUT_PROPERTY_NAME, DEFAULT_ACCEPT_TIMEOUT_MS).intValue();
+    Integer.getInteger(ACCEPT_TIMEOUT_PROPERTY_NAME, DEFAULT_ACCEPT_TIMEOUT_MS).intValue();
 
-  /** The mininum value of max-connections */
+  /**
+   * The mininum value of max-connections
+   */
   public static final int MINIMUM_MAX_CONNECTIONS = 16;
 
-  /** The buffer size for server-side sockets. */
+  /**
+   * The buffer size for server-side sockets.
+   */
   private final int socketBufferSize;
 
-  /** Notifies clients of updates */
+  /**
+   * Notifies clients of updates
+   */
   private CacheClientNotifier clientNotifier;
 
   /**
@@ -201,7 +221,9 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    */
   private static final int DEFAULT_BACKLOG = 1000;
 
-  /** The system property name for setting the {@link ServerSocket}backlog */
+  /**
+   * The system property name for setting the {@link ServerSocket}backlog
+   */
   public static final String BACKLOG_PROPERTY_NAME = "BridgeServer.backlog";
 
   /**
@@ -209,13 +231,19 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    */
   public final AtomicInteger clientServerCnxCount = new AtomicInteger();
 
-  /** Has this acceptor been shut down */
+  /**
+   * Has this acceptor been shut down
+   */
   private volatile boolean shutdownStarted = false;
 
-  /** The thread that runs the acceptor */
+  /**
+   * The thread that runs the acceptor
+   */
   private Thread thread = null;
 
-  /** The thread that runs the selector loop if any */
+  /**
+   * The thread that runs the selector loop if any
+   */
   private Thread selectorThread = null;
 
   /**
@@ -225,16 +253,16 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
   /**
    * List of ServerConnection.
-   * 
+   * <p>
    * Instances added when constructed; removed when terminated.
-   * 
+   * <p>
    * guarded.By {@link #allSCsLock}
    */
   private final HashSet allSCs = new HashSet();
 
   /**
    * List of ServerConnections, for {@link #emergencyClose()}
-   * 
+   * <p>
    * guarded.By {@link #allSCsLock}
    */
   private volatile ServerConnection allSCList[] = new ServerConnection[0];
@@ -242,7 +270,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   /**
    * The ip address or host name this acceptor is to bind to; <code>null</code> or "" indicates it
    * will listen on all local addresses.
-   * 
+   *
    * @since GemFire 5.7
    */
   private final String bindHostName;
@@ -252,10 +280,14 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    */
   private final ConnectionListener connectionListener;
 
-  /** The client health monitor tracking connections for this acceptor */
+  /**
+   * The client health monitor tracking connections for this acceptor
+   */
   private ClientHealthMonitor healthMonitor;
 
-  /** bridge's setting of notifyBySubscription */
+  /**
+   * bridge's setting of notifyBySubscription
+   */
   private final boolean notifyBySubscription;
 
   /**
@@ -276,27 +308,26 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
   /**
    * Initializes this acceptor thread to listen for connections on the given port.
-   * 
-   * @param port The port on which this acceptor listens for connections. If <code>0</code>, a
-   *        random port will be chosen.
-   * @param bindHostName The ip address or host name this acceptor listens on for connections. If
-   *        <code>null</code> or "" then all local addresses are used
-   * @param socketBufferSize The buffer size for server-side sockets
+   *
+   * @param port                    The port on which this acceptor listens for connections. If <code>0</code>, a
+   *                                random port will be chosen.
+   * @param bindHostName            The ip address or host name this acceptor listens on for connections. If
+   *                                <code>null</code> or "" then all local addresses are used
+   * @param socketBufferSize        The buffer size for server-side sockets
    * @param maximumTimeBetweenPings The maximum time between client pings. This value is used by the
-   *        <code>ClientHealthMonitor</code> to monitor the health of this server's clients.
-   * @param internalCache The GemFire cache whose contents is served to clients
-   * @param maxConnections the maximum number of connections allowed in the server pool
-   * @param maxThreads the maximum number of threads allowed in the server pool
-   * 
+   *                                <code>ClientHealthMonitor</code> to monitor the health of this server's clients.
+   * @param internalCache           The GemFire cache whose contents is served to clients
+   * @param maxConnections          the maximum number of connections allowed in the server pool
+   * @param maxThreads              the maximum number of threads allowed in the server pool
    * @see SocketCreator#createServerSocket(int, int, InetAddress)
    * @see ClientHealthMonitor
    * @since GemFire 5.7
    */
   public AcceptorImpl(int port, String bindHostName, boolean notifyBySubscription,
-      int socketBufferSize, int maximumTimeBetweenPings, InternalCache internalCache,
-      int maxConnections, int maxThreads, int maximumMessageCount, int messageTimeToLive,
-      ConnectionListener listener, List overflowAttributesList, boolean isGatewayReceiver,
-      List<GatewayTransportFilter> transportFilter, boolean tcpNoDelay) throws IOException {
+                      int socketBufferSize, int maximumTimeBetweenPings, InternalCache internalCache,
+                      int maxConnections, int maxThreads, int maximumMessageCount, int messageTimeToLive,
+                      ConnectionListener listener, List overflowAttributesList, boolean isGatewayReceiver,
+                      List<GatewayTransportFilter> transportFilter, boolean tcpNoDelay) throws IOException {
     this.bindHostName = calcBindHostName(internalCache, bindHostName);
     this.connectionListener = listener == null ? new ConnectionListenerAdapter() : listener;
     this.notifyBySubscription = notifyBySubscription;
@@ -333,13 +364,13 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         // bug #40472 and JDK bug 6230761 - NIO can't be used with IPv6 on Windows
         if (getBindAddress() instanceof Inet6Address) {
           logger.warn(LocalizedMessage
-              .create(LocalizedStrings.AcceptorImpl_IGNORING_MAX_THREADS_DUE_TO_JROCKIT_NIO_BUG));
+            .create(LocalizedStrings.AcceptorImpl_IGNORING_MAX_THREADS_DUE_TO_JROCKIT_NIO_BUG));
           tmp_maxThreads = 0;
         }
         // bug #40198 - Selector.wakeup() hangs if VM starts to exit
         if (isJRockit) {
           logger.warn(LocalizedMessage
-              .create(LocalizedStrings.AcceptorImpl_IGNORING_MAX_THREADS_DUE_TO_WINDOWS_IPV6_BUG));
+            .create(LocalizedStrings.AcceptorImpl_IGNORING_MAX_THREADS_DUE_TO_WINDOWS_IPV6_BUG));
           tmp_maxThreads = 0;
         }
       }
@@ -373,10 +404,10 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       if (!isGatewayReceiver) {
         // If configured use SSL properties for cache-server
         this.socketCreator =
-            SocketCreatorFactory.getSocketCreatorForComponent(SecurableCommunicationChannel.SERVER);
+          SocketCreatorFactory.getSocketCreatorForComponent(SecurableCommunicationChannel.SERVER);
       } else {
         this.socketCreator = SocketCreatorFactory
-            .getSocketCreatorForComponent(SecurableCommunicationChannel.GATEWAY);
+          .getSocketCreatorForComponent(SecurableCommunicationChannel.GATEWAY);
       }
 
       final InternalCache gc;
@@ -391,8 +422,8 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       if (isSelector()) {
         if (this.socketCreator.useSSL()) {
           throw new IllegalArgumentException(
-              LocalizedStrings.AcceptorImpl_SELECTOR_THREAD_POOLING_CAN_NOT_BE_USED_WITH_CLIENTSERVER_SSL_THE_SELECTOR_CAN_BE_DISABLED_BY_SETTING_MAXTHREADS0
-                  .toLocalizedString());
+            LocalizedStrings.AcceptorImpl_SELECTOR_THREAD_POOLING_CAN_NOT_BE_USED_WITH_CLIENTSERVER_SSL_THE_SELECTOR_CAN_BE_DISABLED_BY_SETTING_MAXTHREADS0
+              .toLocalizedString());
         }
         ServerSocketChannel channel = ServerSocketChannel.open();
         this.serverSock = channel.socket();
@@ -406,7 +437,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         // fix for bug 36617. If BindException is thrown, retry after
         // sleeping. The server may have been stopped and then
         // immediately restarted, which sometimes results in a bind exception
-        for (;;) {
+        for (; ; ) {
           try {
             this.serverSock.bind(new InetSocketAddress(getBindAddress(), port), backLog);
             break;
@@ -435,10 +466,10 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         // fix for bug 36617. If BindException is thrown, retry after
         // sleeping. The server may have been stopped and then
         // immediately restarted, which sometimes results in a bind exception
-        for (;;) {
+        for (; ; ) {
           try {
             this.serverSock = this.socketCreator.createServerSocket(port, backLog, getBindAddress(),
-                this.gatewayTransportFilters, socketBufferSize);
+              this.gatewayTransportFilters, socketBufferSize);
             break;
           } catch (SocketException e) {
             if (!treatAsBindException(e) || System.currentTimeMillis() > tilt) {
@@ -470,7 +501,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         if (ds != null) {
           DM dm = ds.getDistributionManager();
           if (dm != null && dm.getDistributionManagerId().getPort() == 0
-              && (dm instanceof LonerDistributionManager)) {
+            && (dm instanceof LonerDistributionManager)) {
             // a server with a loner distribution manager - update it's port number
             ((LonerDistributionManager) dm).updateLonerPort(port);
           }
@@ -479,8 +510,8 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       this.localPort = port;
       String sockName = this.serverSock.getLocalSocketAddress().toString();
       logger.info(LocalizedMessage.create(
-          LocalizedStrings.AcceptorImpl_CACHE_SERVER_CONNECTION_LISTENER_BOUND_TO_ADDRESS_0_WITH_BACKLOG_1,
-          new Object[] {sockName, Integer.valueOf(backLog)}));
+        LocalizedStrings.AcceptorImpl_CACHE_SERVER_CONNECTION_LISTENER_BOUND_TO_ADDRESS_0_WITH_BACKLOG_1,
+        new Object[]{sockName, Integer.valueOf(backLog)}));
       if (isGatewayReceiver) {
         this.stats = GatewayReceiverStats.createGatewayReceiverStats(sockName);
       } else {
@@ -493,18 +524,18 @@ public class AcceptorImpl extends Acceptor implements Runnable {
     this.crHelper = new CachedRegionHelper(this.cache);
 
     this.clientNotifier = CacheClientNotifier.getInstance(cache, this.stats, maximumMessageCount,
-        messageTimeToLive, connectionListener, overflowAttributesList, isGatewayReceiver);
+      messageTimeToLive, connectionListener, overflowAttributesList, isGatewayReceiver);
     this.socketBufferSize = socketBufferSize;
 
     // Create the singleton ClientHealthMonitor
     this.healthMonitor = ClientHealthMonitor.getInstance(internalCache, maximumTimeBetweenPings,
-        this.clientNotifier.getStats());
+      this.clientNotifier.getStats());
 
     {
       ThreadPoolExecutor tmp_pool = null;
       String gName = "ServerConnection "
-          // + serverSock.getInetAddress()
-          + "on port " + this.localPort;
+        // + serverSock.getInetAddress()
+        + "on port " + this.localPort;
       final ThreadGroup socketThreadGroup = LoggingThreadGroup.createThreadGroup(gName, logger);
 
       ThreadFactory socketThreadFactory = new ThreadFactory() {
@@ -534,10 +565,10 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       try {
         if (isSelector()) {
           tmp_pool = new PooledExecutorWithDMStats(new LinkedBlockingQueue(), this.maxThreads,
-              getStats().getCnxPoolHelper(), socketThreadFactory, Integer.MAX_VALUE);
+            getStats().getCnxPoolHelper(), socketThreadFactory, Integer.MAX_VALUE);
         } else {
           tmp_pool = new ThreadPoolExecutor(MINIMUM_MAX_CONNECTIONS, this.maxConnections, 0L,
-              TimeUnit.MILLISECONDS, new SynchronousQueue(), socketThreadFactory);
+            TimeUnit.MILLISECONDS, new SynchronousQueue(), socketThreadFactory);
         }
       } catch (IllegalArgumentException poolInitException) {
         this.stats.close();
@@ -573,12 +604,12 @@ public class AcceptorImpl extends Acceptor implements Runnable {
             } catch (InterruptedException ex) {
               Thread.currentThread().interrupt(); // preserve the state
               throw new RejectedExecutionException(
-                  LocalizedStrings.AcceptorImpl_INTERRUPTED.toLocalizedString(), ex);
+                LocalizedStrings.AcceptorImpl_INTERRUPTED.toLocalizedString(), ex);
             }
           }
         };
         tmp_hsPool = new ThreadPoolExecutor(1, HANDSHAKE_POOL_SIZE, 60, TimeUnit.SECONDS, bq,
-            socketThreadFactory, reh);
+          socketThreadFactory, reh);
       } catch (IllegalArgumentException poolInitException) {
         this.stats.close();
         this.serverSock.close();
@@ -593,10 +624,10 @@ public class AcceptorImpl extends Acceptor implements Runnable {
     isIntegratedSecurity = this.securityService.isIntegratedSecurity();
 
     String postAuthzFactoryName =
-        this.cache.getDistributedSystem().getProperties().getProperty(SECURITY_CLIENT_ACCESSOR_PP);
+      this.cache.getDistributedSystem().getProperties().getProperty(SECURITY_CLIENT_ACCESSOR_PP);
 
     isPostAuthzCallbackPresent =
-        (postAuthzFactoryName != null && postAuthzFactoryName.length() > 0) ? true : false;
+      (postAuthzFactoryName != null && postAuthzFactoryName.length() > 0) ? true : false;
   }
 
   public long getAcceptorId() {
@@ -617,7 +648,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   /**
    * This system property is only used if max-threads == 0. This is for 5.0.2 backwards
    * compatibility.
-   * 
+   *
    * @deprecated since 5.1 use cache-server max-threads instead
    */
   @Deprecated
@@ -626,21 +657,21 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   /**
    * This system property is only used if max-threads == 0. This is for 5.0.2 backwards
    * compatibility.
-   * 
+   *
    * @deprecated since 5.1 use cache-server max-threads instead
    */
   @Deprecated
   private final static int DEPRECATED_SELECTOR_POOL_SIZE =
-      Integer.getInteger("BridgeServer.SELECTOR_POOL_SIZE", 16).intValue();
+    Integer.getInteger("BridgeServer.SELECTOR_POOL_SIZE", 16).intValue();
   private final static int HANDSHAKE_POOL_SIZE =
-      Integer.getInteger("BridgeServer.HANDSHAKE_POOL_SIZE", 4).intValue();
+    Integer.getInteger("BridgeServer.HANDSHAKE_POOL_SIZE", 4).intValue();
 
   @Override
   public void start() throws IOException {
     ThreadGroup tg = LoggingThreadGroup.createThreadGroup(
-        "Acceptor " + this.serverSock.getInetAddress() + ":" + this.localPort, logger);
+      "Acceptor " + this.serverSock.getInetAddress() + ":" + this.localPort, logger);
     thread = new Thread(tg, this, "Cache Server Acceptor " + this.serverSock.getInetAddress() + ":"
-        + this.localPort + " local port: " + this.serverSock.getLocalPort());
+      + this.localPort + " local port: " + this.serverSock.getLocalPort());
 
     this.acceptorId = thread.getId();
 
@@ -655,14 +686,14 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         }
       };
       this.selectorThread =
-          new Thread(tg, r, "Cache Server Selector " + this.serverSock.getInetAddress() + ":"
-              + this.localPort + " local port: " + this.serverSock.getLocalPort());
+        new Thread(tg, r, "Cache Server Selector " + this.serverSock.getInetAddress() + ":"
+          + this.localPort + " local port: " + this.serverSock.getLocalPort());
       this.selectorThread.start();
     }
     Set<PartitionedRegion> prs = this.cache.getPartitionedRegions();
     for (PartitionedRegion pr : prs) {
       Map<Integer, BucketAdvisor.BucketProfile> profiles =
-          new HashMap<Integer, BucketAdvisor.BucketProfile>();
+        new HashMap<Integer, BucketAdvisor.BucketProfile>();
       // get all local real bucket advisors
       Map<Integer, BucketAdvisor> advisors = pr.getRegionAdvisor().getAllBucketAdvisors();
       for (Map.Entry<Integer, BucketAdvisor> entry : advisors.entrySet()) {
@@ -677,7 +708,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       receipients = pr.getRegionAdvisor().adviseAllPRNodes();
       // send it to all in one messgae
       ReplyProcessor21 reply = AllBucketProfilesUpdateMessage.send(receipients,
-          pr.getDistributionManager(), pr.getPRId(), profiles, true);
+        pr.getDistributionManager(), pr.getPRId(), profiles, true);
       if (reply != null) {
         reply.waitForRepliesUninterruptibly();
       }
@@ -695,7 +726,9 @@ public class AcceptorImpl extends Acceptor implements Runnable {
     wakeupSelector();
   }
 
-  /** wake up the selector thread */
+  /**
+   * wake up the selector thread
+   */
   private void wakeupSelector() {
     Selector s = getSelector();
     if (s != null && s.isOpen()) {
@@ -762,7 +795,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
   /**
    * Ensure that the CachedRegionHelper and ServerConnection classes get loaded.
-   * 
+   *
    * @see SystemFailure#loadEmergencyClasses()
    */
   public static void loadEmergencyClasses() {
@@ -829,7 +862,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   }
 
   private static final boolean WORKAROUND_SELECTOR_BUG =
-      Boolean.getBoolean("CacheServer.NIO_SELECTOR_WORKAROUND");
+    Boolean.getBoolean("CacheServer.NIO_SELECTOR_WORKAROUND");
 
   private Selector tmpSel;
 
@@ -841,7 +874,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         tmpSel = Selector.open();
       } catch (IOException ignore) {
         logger.warn(LocalizedMessage
-            .create(LocalizedStrings.AcceptorImpl_COULD_NOT_CHECK_FOR_STUCK_KEYS, ignore));
+          .create(LocalizedStrings.AcceptorImpl_COULD_NOT_CHECK_FOR_STUCK_KEYS, ignore));
         return;
       }
 
@@ -857,13 +890,13 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         sk.cancel();
         this.selector.selectNow(); // clear the cancelled key
         SelectionKey tmpsk = sc.getSelectableChannel().register(this.tmpSel,
-            SelectionKey.OP_WRITE | SelectionKey.OP_READ);
+          SelectionKey.OP_WRITE | SelectionKey.OP_READ);
         try {
           // it should always be writable
           int events = this.tmpSel.selectNow();
           if (events == 0) {
             logger.info(LocalizedMessage
-                .create(LocalizedStrings.AcceptorImpl_STUCK_SELECTION_KEY_DETECTED_ON_0, sc));
+              .create(LocalizedStrings.AcceptorImpl_STUCK_SELECTION_KEY_DETECTED_ON_0, sc));
             tmpsk.cancel();
             tmpSel.selectNow(); // clear canceled key
             sc.registerWithSelector2(this.selector);
@@ -890,7 +923,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
                 finishCon(sc);
                 if (isRunning()) {
                   logger.warn(LocalizedMessage
-                      .create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex));
+                    .create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex));
                 }
                 continue;
               }
@@ -904,7 +937,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
                   break;
                 }
                 logger.warn(LocalizedMessage
-                    .create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, rejected));
+                  .create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, rejected));
               }
             } else if (tmpsk.isValid() && tmpsk.isWritable()) {
               // this is expected
@@ -920,14 +953,14 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         } catch (IOException ex) {
           if (isRunning() && this.selector.isOpen() && this.tmpSel.isOpen()) {
             logger.warn(
-                LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex));
+              LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex));
             try {
               tmpsk.cancel();
               tmpSel.selectNow(); // clear canceled key
             } catch (IOException ex2) {
               if (isRunning() && this.selector.isOpen() && this.tmpSel.isOpen()) {
                 logger.warn(LocalizedMessage
-                    .create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex2));
+                  .create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex2));
               }
             }
           }
@@ -939,12 +972,12 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       } catch (IOException ex) {
         if (isRunning() && this.selector.isOpen() && this.tmpSel.isOpen()) {
           logger.warn(
-              LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex));
+            LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, ex));
         }
       } catch (NullPointerException npe) { // fix bug 39644
         if (isRunning() && this.selector.isOpen() && this.tmpSel.isOpen()) {
           logger.warn(
-              LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, npe));
+            LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED_EXCEPTION, npe));
         }
       }
     }
@@ -1078,7 +1111,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
                   finishCon(sc);
                   if (isRunning()) {
                     logger.warn(
-                        LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED, ex));
+                      LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED, ex));
                   }
                   continue;
                 }
@@ -1092,7 +1125,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
                     break;
                   }
                   logger.warn(
-                      LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED, rejected));
+                    LocalizedMessage.create(LocalizedStrings.AcceptorImpl_UNEXPECTED, rejected));
                 }
                 // } else if (key.isValid() && key.isConnectable()) {
                 // logger.info("DEBUG isConnectable and isValid key=" + key);
@@ -1101,7 +1134,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
                 finishCon(sc);
                 if (key.isValid()) {
                   logger.warn(LocalizedMessage.create(
-                      LocalizedStrings.AcceptorImpl_IGNORING_EVENT_ON_SELECTOR_KEY__0, key));
+                    LocalizedStrings.AcceptorImpl_IGNORING_EVENT_ON_SELECTOR_KEY__0, key));
                   // } else {
                   // logger.info("DEBUG !isValid key=" + key);
                 }
@@ -1148,7 +1181,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
   /**
    * The work loop of this acceptor
-   * 
+   *
    * @see #accept
    */
   public void run() {
@@ -1254,7 +1287,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
             try {
               // Try to send a proper rejection message
               ServerHandShakeProcessor.refuse(s.getOutputStream(), e.toString(),
-                  HandShake.REPLY_EXCEPTION_AUTHENTICATION_FAILED);
+                HandShake.REPLY_EXCEPTION_AUTHENTICATION_FAILED);
             } catch (IOException ex) {
               if (logger.isDebugEnabled()) {
                 logger.debug("Bridge server: Unable to write SSL error");
@@ -1267,7 +1300,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
           if (!this.loggedAcceptError) {
             this.loggedAcceptError = true;
             logger.error(LocalizedMessage.create(
-                LocalizedStrings.AcceptorImpl_CACHE_SERVER_UNEXPECTED_IOEXCEPTION_FROM_ACCEPT, e));
+              LocalizedStrings.AcceptorImpl_CACHE_SERVER_UNEXPECTED_IOEXCEPTION_FROM_ACCEPT, e));
           }
           // Why sleep?
           // try {Thread.sleep(3000);} catch (InterruptedException ie) {}
@@ -1279,7 +1312,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         closeSocket(s);
         if (isRunning()) {
           logger.fatal(LocalizedMessage
-              .create(LocalizedStrings.AcceptorImpl_CACHE_SERVER_UNEXPECTED_EXCEPTION, e));
+            .create(LocalizedStrings.AcceptorImpl_CACHE_SERVER_UNEXPECTED_EXCEPTION, e));
         }
       }
     }
@@ -1315,11 +1348,11 @@ public class AcceptorImpl extends Acceptor implements Runnable {
                 AcceptorImpl.this.loggedAcceptError = true;
                 if (ex instanceof SocketTimeoutException) {
                   logger.warn(LocalizedMessage.create(
-                      LocalizedStrings.AcceptorImpl_CACHE_SERVER_FAILED_ACCEPTING_CLIENT_CONNECTION_DUE_TO_SOCKET_TIMEOUT));
+                    LocalizedStrings.AcceptorImpl_CACHE_SERVER_FAILED_ACCEPTING_CLIENT_CONNECTION_DUE_TO_SOCKET_TIMEOUT));
                 } else {
                   logger.warn(LocalizedMessage.create(
-                      LocalizedStrings.AcceptorImpl_CACHE_SERVER_FAILED_ACCEPTING_CLIENT_CONNECTION__0,
-                      ex), ex);
+                    LocalizedStrings.AcceptorImpl_CACHE_SERVER_FAILED_ACCEPTING_CLIENT_CONNECTION__0,
+                    ex), ex);
                 }
               }
             }
@@ -1393,8 +1426,8 @@ public class AcceptorImpl extends Acceptor implements Runnable {
           @Override
           public void run2() {
             logger.warn(LocalizedMessage.create(
-                LocalizedStrings.AcceptorImpl_CACHE_SERVER_TIMED_OUT_WAITING_FOR_HANDSHAKE_FROM__0,
-                s.getRemoteSocketAddress()));
+              LocalizedStrings.AcceptorImpl_CACHE_SERVER_TIMED_OUT_WAITING_FOR_HANDSHAKE_FROM__0,
+              s.getRemoteSocketAddress()));
             closeSocket(s);
           }
         };
@@ -1424,8 +1457,8 @@ public class AcceptorImpl extends Acceptor implements Runnable {
     s.setTcpNoDelay(this.tcpNoDelay);
 
     if (communicationMode == CLIENT_TO_SERVER || communicationMode == GATEWAY_TO_GATEWAY
-        || communicationMode == MONITOR_TO_SERVER || communicationMode == CLIENT_TO_SERVER_FOR_QUEUE
-        || communicationMode == CLIENT_TO_SERVER_NEW_PROTOCOL) {
+      || communicationMode == MONITOR_TO_SERVER || communicationMode == CLIENT_TO_SERVER_FOR_QUEUE
+      || (communicationMode == CLIENT_TO_SERVER_NEW_PROTOCOL && Boolean.getBoolean("enable-protobuf-protocol"))) {
       String communicationModeStr = "";
       switch (communicationMode) {
         case CLIENT_TO_SERVER:
@@ -1446,84 +1479,93 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       }
       if (logger.isDebugEnabled()) {
         logger.debug("Bridge server: Initializing {} communication socket: {}",
-            communicationModeStr, s);
+          communicationModeStr, s);
       }
       if (communicationMode != CLIENT_TO_SERVER_FOR_QUEUE) {
         int curCnt = this.getClientServerCnxCount();
         if (curCnt >= this.maxConnections) {
           logger.warn(LocalizedMessage.create(
-              LocalizedStrings.AcceptorImpl_REJECTED_CONNECTION_FROM_0_BECAUSE_CURRENT_CONNECTION_COUNT_OF_1_IS_GREATER_THAN_OR_EQUAL_TO_THE_CONFIGURED_MAX_OF_2,
-              new Object[] {s.getInetAddress(), Integer.valueOf(curCnt),
-                  Integer.valueOf(this.maxConnections)}));
-          // if (s != null) (cannot be null)
-          {
-            try {
+            LocalizedStrings.AcceptorImpl_REJECTED_CONNECTION_FROM_0_BECAUSE_CURRENT_CONNECTION_COUNT_OF_1_IS_GREATER_THAN_OR_EQUAL_TO_THE_CONFIGURED_MAX_OF_2,
+            new Object[]{s.getInetAddress(), Integer.valueOf(curCnt),
+              Integer.valueOf(this.maxConnections)}));
+            try { // s cannot be null
               ServerHandShakeProcessor.refuse(s.getOutputStream(),
-                  LocalizedStrings.AcceptorImpl_EXCEEDED_MAX_CONNECTIONS_0
-                      .toLocalizedString(Integer.valueOf(this.maxConnections)));
+                LocalizedStrings.AcceptorImpl_EXCEEDED_MAX_CONNECTIONS_0
+                  .toLocalizedString(Integer.valueOf(this.maxConnections)));
             } catch (Exception ex) {
               if (logger.isDebugEnabled()) {
                 logger.debug("rejection message failed", ex);
               }
             }
             closeSocket(s);
-          }
           return;
         }
       }
-      ServerConnection serverConn = new ServerConnection(s, this.cache, this.crHelper, this.stats,
-          AcceptorImpl.handShakeTimeout, this.socketBufferSize, communicationModeStr,
-          communicationMode, this);
-      synchronized (this.allSCsLock) {
-        this.allSCs.add(serverConn);
-        ServerConnection snap[] = this.allSCList; // avoid volatile read
-        this.allSCList = (ServerConnection[]) ArrayUtils.insert(snap, snap.length, serverConn);
-      }
-      if (communicationMode != CLIENT_TO_SERVER_FOR_QUEUE) {
-        incClientServerCnxCount();
-      }
-      if (isSelector()) {
-        serverConn.registerWithSelector();
-      } else {
-        try {
-          pool.execute(serverConn);
-        } catch (RejectedExecutionException rejected) {
-          if (!isRunning()) {
-            return;
-          }
-          logger.warn(LocalizedMessage.create(
-              LocalizedStrings.AcceptorImpl_REJECTED_CONNECTION_FROM_0_BECAUSE_REQUEST_REJECTED_BY_POOL,
-              new Object[] {serverConn}));
-          try {
-            ServerHandShakeProcessor.refuse(s.getOutputStream(),
-                LocalizedStrings.AcceptorImpl_EXCEEDED_MAX_CONNECTIONS_0
-                    .toLocalizedString(Integer.valueOf(this.maxConnections)));
 
-          } catch (Exception ex) {
-            if (logger.isDebugEnabled()) {
-              logger.debug("rejection message failed", ex);
-            }
-          }
-          serverConn.cleanup();
+      ServerConnection serverConn = new ServerConnection(s, this.cache, this.crHelper, this.stats,
+        AcceptorImpl.handShakeTimeout, this.socketBufferSize, communicationModeStr,
+        communicationMode, this);
+      try {
+        registerNewConnection(communicationMode == CLIENT_TO_SERVER_FOR_QUEUE, serverConn);
+      } catch (RejectedExecutionException rejected) {
+        if (!isRunning()) {
+          return;
         }
+        logger.warn(LocalizedMessage.create(
+          LocalizedStrings.AcceptorImpl_REJECTED_CONNECTION_FROM_0_BECAUSE_REQUEST_REJECTED_BY_POOL,
+          new Object[]{serverConn}));
+        try {
+          ServerHandShakeProcessor.refuse(s.getOutputStream(),
+            LocalizedStrings.AcceptorImpl_EXCEEDED_MAX_CONNECTIONS_0
+              .toLocalizedString(Integer.valueOf(this.maxConnections)));
+
+        } catch (Exception ex) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("rejection message failed", ex);
+          }
+        }
+        serverConn.cleanup();
       }
     } else if (communicationMode == PRIMARY_SERVER_TO_CLIENT) {
       if (logger.isDebugEnabled()) {
         logger.debug(
-            ":Bridge server: Initializing primary server-to-client communication socket: {}", s);
+          ":Bridge server: Initializing primary server-to-client communication socket: {}", s);
       }
       // try {
       AcceptorImpl.this.clientNotifier.registerClient(s, true, this.acceptorId,
-          this.notifyBySubscription);
+        this.notifyBySubscription);
     } else if (communicationMode == SECONDARY_SERVER_TO_CLIENT) {
       if (logger.isDebugEnabled()) {
         logger.debug(
-            ":Bridge server: Initializing secondary server-to-client communication socket: {}", s);
+          ":Bridge server: Initializing secondary server-to-client communication socket: {}", s);
       }
       AcceptorImpl.this.clientNotifier.registerClient(s, false, this.acceptorId,
-          this.notifyBySubscription);
+        this.notifyBySubscription);
     } else {
       throw new IOException("Acceptor received unknown communication mode: " + communicationMode);
+    }
+  }
+
+  /**
+   *
+   * @param isClientServerForQueue
+   * @param serverConn
+   * @throws IOException
+   * @throws RejectedExecutionException if the connection cannot be executed in the thread pool.
+   */
+  private void registerNewConnection(boolean isClientServerForQueue, ServerConnection serverConn) throws IOException {
+    synchronized (this.allSCsLock) {
+      this.allSCs.add(serverConn);
+      ServerConnection snap[] = this.allSCList; // avoid volatile read
+      this.allSCList = (ServerConnection[]) ArrayUtils.insert(snap, snap.length, serverConn);
+    }
+    if (!isClientServerForQueue) {
+      incClientServerCnxCount();
+    }
+    if (isSelector()) {
+      serverConn.registerWithSelector();
+    } else {
+      pool.execute(serverConn);
     }
   }
 
@@ -1541,7 +1583,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         }
         this.shutdownStarted = true;
         logger.info(LocalizedMessage.create(
-            LocalizedStrings.AcceptorImpl_CACHE_SERVER_ON_PORT_0_IS_SHUTTING_DOWN, this.localPort));
+          LocalizedStrings.AcceptorImpl_CACHE_SERVER_ON_PORT_0_IS_SHUTTING_DOWN, this.localPort));
         if (this.thread != null) {
           this.thread.interrupt();
         }
@@ -1580,7 +1622,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         Set recipients = pr.getRegionAdvisor().adviseAllPRNodes();
         // send it to all in one message
         ReplyProcessor21 reply = AllBucketProfilesUpdateMessage.send(recipients,
-            pr.getDistributionManager(), pr.getPRId(), profiles, true);
+          pr.getDistributionManager(), pr.getPRId(), profiles, true);
         if (reply != null) {
           reply.waitForRepliesUninterruptibly();
         }
@@ -1618,7 +1660,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
     try {
       if (!this.pool.awaitTermination(PoolImpl.SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS)) {
         logger.warn(LocalizedMessage
-            .create(LocalizedStrings.PoolImpl_TIMEOUT_WAITING_FOR_BACKGROUND_TASKS_TO_COMPLETE));
+          .create(LocalizedStrings.PoolImpl_TIMEOUT_WAITING_FOR_BACKGROUND_TASKS_TO_COMPLETE));
         this.pool.shutdownNow();
       }
     } catch (InterruptedException ignore) {
@@ -1640,17 +1682,16 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
   public boolean isShutdownProperly() {
     return !isRunning() && !thread.isAlive()
-        && (selectorThread == null || !selectorThread.isAlive())
-        && (pool == null || pool.isShutdown()) && (hsPool == null || hsPool.isShutdown())
-        && (selector == null || !selector.isOpen()) && (tmpSel == null || !tmpSel.isOpen());
+      && (selectorThread == null || !selectorThread.isAlive())
+      && (pool == null || pool.isShutdown()) && (hsPool == null || hsPool.isShutdown())
+      && (selector == null || !selector.isOpen()) && (tmpSel == null || !tmpSel.isOpen());
   }
 
   /**
    * @param bindName the ip address or host name that this acceptor should bind to. If null or ""
-   *        then calculate it.
+   *                 then calculate it.
    * @return the ip address or host name this acceptor will listen on. An "" if all local addresses
-   *         will be listened to.
-   * 
+   * will be listened to.
    * @since GemFire 5.7
    */
   private static String calcBindHostName(Cache cache, String bindName) {
@@ -1687,7 +1728,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
   /**
    * Gets the address that this bridge server can be contacted on from external processes.
-   * 
+   *
    * @since GemFire 5.7
    */
   public String getExternalAddress() {
@@ -1721,7 +1762,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   /**
    * This method finds a client notifier and returns it. It is used to propagate interest
    * registrations to other servers
-   * 
+   *
    * @return the instance that provides client notification
    */
   public CacheClientNotifier getCacheClientNotifier() {
@@ -1778,7 +1819,6 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    * This method returns a thread safe structure which can be iterated over without worrying about
    * ConcurrentModificationException. JMX MBeans/Commands need to iterate over this list to get
    * client info.
-   * 
    */
   public ServerConnection[] getAllServerConnectionList() {
     return this.allSCList;
