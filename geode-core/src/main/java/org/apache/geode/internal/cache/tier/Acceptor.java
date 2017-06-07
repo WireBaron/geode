@@ -76,6 +76,13 @@ public abstract class Acceptor {
    */
   public static final byte CLIENT_TO_SERVER_NEW_PROTOCOL = (byte) 110;
 
+  /**
+   * @return whether a secret feature flag has been set, enabling a feature mere mortals were not
+   *         meant to know.
+   */
+  public static final boolean protobufProtocolFeatureEnabled() {
+    return Boolean.getBoolean("enable-protobuf-protocol");
+  }
 
   /**
    * The GFE version of the server.

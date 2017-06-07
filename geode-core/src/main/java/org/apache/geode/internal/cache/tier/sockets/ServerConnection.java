@@ -946,8 +946,8 @@ public class ServerConnection implements Runnable {
   }
 
   private void doOneMessage() {
-    boolean useNewClientProtocol =
-        this.communicationMode == AcceptorImpl.CLIENT_TO_SERVER_NEW_PROTOCOL;
+    boolean useNewClientProtocol = AcceptorImpl.protobufProtocolFeatureEnabled()
+        && this.communicationMode == AcceptorImpl.CLIENT_TO_SERVER_NEW_PROTOCOL;
     if (useNewClientProtocol) {
       try {
         Socket socket = this.getSocket();

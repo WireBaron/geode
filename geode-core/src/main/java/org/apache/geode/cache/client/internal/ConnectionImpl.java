@@ -119,15 +119,8 @@ public class ConnectionImpl implements Connection {
     out = theSocket.getOutputStream();
     in = theSocket.getInputStream();
 
-    if (communicationMode == AcceptorImpl.CLIENT_TO_SERVER_NEW_PROTOCOL) {
-      handShake.writeNewProtcolVersionForServer(this, communicationMode);
-      InetSocketAddress remoteAddr = (InetSocketAddress) theSocket.getRemoteSocketAddress();
-      DistributedMember distributedMember =
-          new InternalDistributedMember(remoteAddr.getAddress(), remoteAddr.getPort());
-      this.status = new ServerQueueStatus(distributedMember);
-    } else {
-      this.status = handShake.handshakeWithServer(this, location, communicationMode);
-    }
+    this.status = handShake.handshakeWithServer(this, location, communicationMode);
+
     commBuffer = ServerConnection.allocateCommBuffer(socketBufferSize, theSocket);
     if (sender != null) {
       commBufferForAsyncRead = ServerConnection.allocateCommBuffer(socketBufferSize, theSocket);
