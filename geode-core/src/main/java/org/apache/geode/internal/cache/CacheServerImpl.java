@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.geode.internal.cache.tier.sockets.AcceptorConfiguration;
 import org.apache.logging.log4j.Logger;
 
 import org.apache.geode.CancelCriterion;
@@ -36,7 +37,6 @@ import org.apache.geode.InvalidValueException;
 import org.apache.geode.cache.AttributesFactory;
 import org.apache.geode.cache.ClientSession;
 import org.apache.geode.cache.DataPolicy;
-import org.apache.geode.cache.DiskStore;
 import org.apache.geode.cache.DiskStoreFactory;
 import org.apache.geode.cache.DynamicRegionFactory;
 import org.apache.geode.cache.EvictionAction;
@@ -335,11 +335,8 @@ public class CacheServerImpl extends AbstractCacheServer implements Distribution
       overflowAttributesList.add(4, false);
     }
 
-    this.acceptor = new AcceptorImpl(getPort(), getBindAddress(), getNotifyBySubscription(),
-        getSocketBufferSize(), getMaximumTimeBetweenPings(), this.cache, getMaxConnections(),
-        getMaxThreads(), getMaximumMessageCount(), getMessageTimeToLive(), this.loadMonitor,
-        overflowAttributesList, this.isGatewayReceiver, this.gatewayTransportFilters,
-        this.tcpNoDelay);
+    this.acceptor = new AcceptorImpl(
+      new AcceptorConfiguration(getPort(), getBindAddress(), getNotifyBySubscription(), getSocketBufferSize(), getMaximumTimeBetweenPings(), this.cache, getMaxConnections(), getMaxThreads(), getMaximumMessageCount(), getMessageTimeToLive(), this.loadMonitor, overflowAttributesList, this.isGatewayReceiver, this.gatewayTransportFilters, this.tcpNoDelay));
 
     this.acceptor.start();
     this.advisor.handshake();

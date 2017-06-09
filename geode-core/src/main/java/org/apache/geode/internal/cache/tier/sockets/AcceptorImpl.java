@@ -277,41 +277,28 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   /**
    * Initializes this acceptor thread to listen for connections on the given port.
    * 
-   * @param port The port on which this acceptor listens for connections. If <code>0</code>, a
-   *        random port will be chosen.
-   * @param bindHostName The ip address or host name this acceptor listens on for connections. If
-   *        <code>null</code> or "" then all local addresses are used
-   * @param socketBufferSize The buffer size for server-side sockets
-   * @param maximumTimeBetweenPings The maximum time between client pings. This value is used by the
-   *        <code>ClientHealthMonitor</code> to monitor the health of this server's clients.
-   * @param internalCache The GemFire cache whose contents is served to clients
-   * @param maxConnections the maximum number of connections allowed in the server pool
-   * @param maxThreads the maximum number of threads allowed in the server pool
-   * 
-   * @see SocketCreator#createServerSocket(int, int, InetAddress)
+   *
+   * @param acceptorConfiguration@see SocketCreator#createServerSocket(int, int, InetAddress)
    * @see ClientHealthMonitor
    * @since GemFire 5.7
    */
-  public AcceptorImpl(int port, String bindHostName, boolean notifyBySubscription,
-      int socketBufferSize, int maximumTimeBetweenPings, InternalCache internalCache,
-      int maxConnections, int maxThreads, int maximumMessageCount, int messageTimeToLive,
-      ConnectionListener listener, List overflowAttributesList, boolean isGatewayReceiver,
-      List<GatewayTransportFilter> transportFilter, boolean tcpNoDelay) throws IOException {
-    this.bindHostName = calcBindHostName(internalCache, bindHostName);
-    this.connectionListener = listener == null ? new ConnectionListenerAdapter() : listener;
-    this.notifyBySubscription = notifyBySubscription;
-    this.isGatewayReceiver = isGatewayReceiver;
-    this.gatewayTransportFilters = transportFilter;
+  public AcceptorImpl(
+    AcceptorConfiguration acceptorConfiguration) throws IOException {
+    this.bindHostName = calcBindHostName(acceptorConfiguration.getInternalCache(), acceptorConfiguration.getBindHostName());
+    this.connectionListener = acceptorConfiguration.getListener() == null ? new ConnectionListenerAdapter() : acceptorConfiguration.getListener();
+    this.notifyBySubscription = acceptorConfiguration.isNotifyBySubscription();
+    this.isGatewayReceiver = acceptorConfiguration.isGatewayReceiver();
+    this.gatewayTransportFilters = acceptorConfiguration.getTransportFilter();
     {
-      int tmp_maxConnections = maxConnections;
+      int tmp_maxConnections = acceptorConfiguration.getMaxConnections();
       if (tmp_maxConnections < MINIMUM_MAX_CONNECTIONS) {
         tmp_maxConnections = MINIMUM_MAX_CONNECTIONS;
       }
       this.maxConnections = tmp_maxConnections;
     }
     {
-      int tmp_maxThreads = maxThreads;
-      if (maxThreads == CacheServer.DEFAULT_MAX_THREADS) {
+      int tmp_maxThreads = acceptorConfiguration.getMaxThreads();
+      if (acceptorConfiguration.getMaxThreads() == CacheServer.DEFAULT_MAX_THREADS) {
         // consult system properties for 5.0.2 backwards compatibility
         if (DEPRECATED_SELECTOR) {
           tmp_maxThreads = DEPRECATED_SELECTOR_POOL_SIZE;
@@ -358,7 +345,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         tmp_q = new LinkedBlockingQueue();
         tmp_commQ = new LinkedBlockingQueue();
         tmp_hs = new HashSet(512);
-        tmp_timer = new SystemTimer(internalCache.getDistributedSystem(), true);
+        tmp_timer = new SystemTimer(acceptorConfiguration.getInternalCache().getDistributedSystem(), true);
       }
       this.selector = tmp_s;
       // this.tmpSel = tmp2_s;
@@ -366,11 +353,11 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       this.commBufferQueue = tmp_commQ;
       this.selectorRegistrations = tmp_hs;
       this.hsTimer = tmp_timer;
-      this.tcpNoDelay = tcpNoDelay;
+      this.tcpNoDelay = acceptorConfiguration.isTcpNoDelay();
     }
 
     {
-      if (!isGatewayReceiver) {
+      if (!acceptorConfiguration.isGatewayReceiver()) {
         // If configured use SSL properties for cache-server
         this.socketCreator =
             SocketCreatorFactory.getSocketCreatorForComponent(SecurableCommunicationChannel.SERVER);
@@ -401,14 +388,14 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         // Set the receive buffer size before binding the socket so that large
         // buffers will be allocated on accepted sockets (see
         // java.net.ServerSocket.setReceiverBufferSize javadocs)
-        this.serverSock.setReceiveBufferSize(socketBufferSize);
+        this.serverSock.setReceiveBufferSize(acceptorConfiguration.getSocketBufferSize());
 
         // fix for bug 36617. If BindException is thrown, retry after
         // sleeping. The server may have been stopped and then
         // immediately restarted, which sometimes results in a bind exception
         for (;;) {
           try {
-            this.serverSock.bind(new InetSocketAddress(getBindAddress(), port), backLog);
+            this.serverSock.bind(new InetSocketAddress(getBindAddress(), acceptorConfiguration.getPort()), backLog);
             break;
           } catch (SocketException b) {
             if (!treatAsBindException(b) || System.currentTimeMillis() > tilt) {
@@ -437,8 +424,8 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         // immediately restarted, which sometimes results in a bind exception
         for (;;) {
           try {
-            this.serverSock = this.socketCreator.createServerSocket(port, backLog, getBindAddress(),
-                this.gatewayTransportFilters, socketBufferSize);
+            this.serverSock = this.socketCreator.createServerSocket(acceptorConfiguration.getPort(), backLog, getBindAddress(),
+                this.gatewayTransportFilters, acceptorConfiguration.getSocketBufferSize());
             break;
           } catch (SocketException e) {
             if (!treatAsBindException(e) || System.currentTimeMillis() > tilt) {
@@ -462,8 +449,10 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         } // for
       } // !isSelector
 
-      if (port == 0) {
-        port = this.serverSock.getLocalPort();
+      int tmpPort = acceptorConfiguration.getPort();
+
+      if (tmpPort == 0) {
+        tmpPort = this.serverSock.getLocalPort();
       }
       {
         InternalDistributedSystem ds = InternalDistributedSystem.getConnectedInstance();
@@ -472,16 +461,16 @@ public class AcceptorImpl extends Acceptor implements Runnable {
           if (dm != null && dm.getDistributionManagerId().getPort() == 0
               && (dm instanceof LonerDistributionManager)) {
             // a server with a loner distribution manager - update it's port number
-            ((LonerDistributionManager) dm).updateLonerPort(port);
+            ((LonerDistributionManager) dm).updateLonerPort(tmpPort);
           }
         }
       }
-      this.localPort = port;
+      this.localPort = tmpPort;
       String sockName = this.serverSock.getLocalSocketAddress().toString();
       logger.info(LocalizedMessage.create(
           LocalizedStrings.AcceptorImpl_CACHE_SERVER_CONNECTION_LISTENER_BOUND_TO_ADDRESS_0_WITH_BACKLOG_1,
           new Object[] {sockName, Integer.valueOf(backLog)}));
-      if (isGatewayReceiver) {
+      if (acceptorConfiguration.isGatewayReceiver()) {
         this.stats = GatewayReceiverStats.createGatewayReceiverStats(sockName);
       } else {
         this.stats = new CacheServerStats(sockName);
@@ -489,15 +478,15 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
     }
 
-    this.cache = internalCache;
+    this.cache = acceptorConfiguration.getInternalCache();
     this.crHelper = new CachedRegionHelper(this.cache);
 
-    this.clientNotifier = CacheClientNotifier.getInstance(cache, this.stats, maximumMessageCount,
-        messageTimeToLive, connectionListener, overflowAttributesList, isGatewayReceiver);
-    this.socketBufferSize = socketBufferSize;
+    this.clientNotifier = CacheClientNotifier.getInstance(cache, this.stats, acceptorConfiguration.getMaximumMessageCount(),
+      acceptorConfiguration.getMessageTimeToLive(), connectionListener, acceptorConfiguration.getOverflowAttributesList(), acceptorConfiguration.isGatewayReceiver());
+    this.socketBufferSize = acceptorConfiguration.getSocketBufferSize();
 
     // Create the singleton ClientHealthMonitor
-    this.healthMonitor = ClientHealthMonitor.getInstance(internalCache, maximumTimeBetweenPings,
+    this.healthMonitor = ClientHealthMonitor.getInstance(acceptorConfiguration.getInternalCache(), acceptorConfiguration.getMaximumTimeBetweenPings(),
         this.clientNotifier.getStats());
 
     {
