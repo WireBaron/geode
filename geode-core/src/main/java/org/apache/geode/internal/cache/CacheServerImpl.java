@@ -335,8 +335,11 @@ public class CacheServerImpl extends AbstractCacheServer implements Distribution
       overflowAttributesList.add(4, false);
     }
 
-    this.acceptor = new AcceptorImpl(
-      new AcceptorConfiguration(getPort(), getBindAddress(), getNotifyBySubscription(), getSocketBufferSize(), getMaximumTimeBetweenPings(), this.cache, getMaxConnections(), getMaxThreads(), getMaximumMessageCount(), getMessageTimeToLive(), this.loadMonitor, overflowAttributesList, this.isGatewayReceiver, this.gatewayTransportFilters, this.tcpNoDelay));
+    this.acceptor = new AcceptorImpl(new AcceptorConfiguration(getPort(), getBindAddress(),
+        getNotifyBySubscription(), getSocketBufferSize(), getMaximumTimeBetweenPings(), this.cache,
+        getMaxConnections(), getMaxThreads(), getMaximumMessageCount(), getMessageTimeToLive(),
+        this.loadMonitor, overflowAttributesList, this.isGatewayReceiver,
+        this.gatewayTransportFilters, this.tcpNoDelay));
 
     this.acceptor.start();
     this.advisor.handshake();

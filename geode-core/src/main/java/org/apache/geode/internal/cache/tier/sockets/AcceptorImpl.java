@@ -62,13 +62,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.geode.CancelException;
 import org.apache.geode.SystemFailure;
 import org.apache.geode.ToDataException;
-import org.apache.geode.cache.Cache;
 import org.apache.geode.cache.RegionDestroyedException;
 import org.apache.geode.cache.client.internal.PoolImpl;
 import org.apache.geode.cache.server.CacheServer;
 import org.apache.geode.cache.wan.GatewayTransportFilter;
 import org.apache.geode.distributed.internal.DM;
-import org.apache.geode.distributed.internal.DistributionConfig;
 import org.apache.geode.distributed.internal.InternalDistributedSystem;
 import org.apache.geode.distributed.internal.LonerDistributionManager;
 import org.apache.geode.distributed.internal.PooledExecutorWithDMStats;
@@ -239,24 +237,8 @@ public class AcceptorImpl extends Acceptor implements Runnable {
    */
   private volatile ServerConnection allSCList[] = new ServerConnection[0];
 
-  /**
-   * The ip address or host name this acceptor is to bind to; <code>null</code> or "" indicates it
-   * will listen on all local addresses.
-   * 
-   * @since GemFire 5.7
-   */
-  private final String bindHostName;
-
-  /**
-   * A listener for connect/disconnect events
-   */
-  private final ConnectionListener connectionListener;
-
   /** The client health monitor tracking connections for this acceptor */
   private ClientHealthMonitor healthMonitor;
-
-  /** bridge's setting of notifyBySubscription */
-  private final boolean notifyBySubscription;
 
   /**
    * The AcceptorImpl identifier, used to identify the clients connected to this Acceptor.
@@ -273,32 +255,29 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   private final SocketCreator socketCreator;
 
   private SecurityService securityService = IntegratedSecurityService.getSecurityService();
+  private AcceptorConfiguration config;
 
   /**
    * Initializes this acceptor thread to listen for connections on the given port.
    * 
    *
-   * @param acceptorConfiguration@see SocketCreator#createServerSocket(int, int, InetAddress)
+   * @param config@see SocketCreator#createServerSocket(int, int, InetAddress)
    * @see ClientHealthMonitor
    * @since GemFire 5.7
    */
-  public AcceptorImpl(
-    AcceptorConfiguration acceptorConfiguration) throws IOException {
-    this.bindHostName = calcBindHostName(acceptorConfiguration.getInternalCache(), acceptorConfiguration.getBindHostName());
-    this.connectionListener = acceptorConfiguration.getListener() == null ? new ConnectionListenerAdapter() : acceptorConfiguration.getListener();
-    this.notifyBySubscription = acceptorConfiguration.isNotifyBySubscription();
-    this.isGatewayReceiver = acceptorConfiguration.isGatewayReceiver();
-    this.gatewayTransportFilters = acceptorConfiguration.getTransportFilter();
+  public AcceptorImpl(AcceptorConfiguration config) throws IOException {
+    this.config = config;
+    this.gatewayTransportFilters = config.getTransportFilter();
     {
-      int tmp_maxConnections = acceptorConfiguration.getMaxConnections();
+      int tmp_maxConnections = config.getMaxConnections();
       if (tmp_maxConnections < MINIMUM_MAX_CONNECTIONS) {
         tmp_maxConnections = MINIMUM_MAX_CONNECTIONS;
       }
       this.maxConnections = tmp_maxConnections;
     }
     {
-      int tmp_maxThreads = acceptorConfiguration.getMaxThreads();
-      if (acceptorConfiguration.getMaxThreads() == CacheServer.DEFAULT_MAX_THREADS) {
+      int tmp_maxThreads = config.getMaxThreads();
+      if (config.getMaxThreads() == CacheServer.DEFAULT_MAX_THREADS) {
         // consult system properties for 5.0.2 backwards compatibility
         if (DEPRECATED_SELECTOR) {
           tmp_maxThreads = DEPRECATED_SELECTOR_POOL_SIZE;
@@ -318,7 +297,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       }
       if (tmp_maxThreads > 0 && isWindows) {
         // bug #40472 and JDK bug 6230761 - NIO can't be used with IPv6 on Windows
-        if (getBindAddress() instanceof Inet6Address) {
+        if (this.config.getBindAddress() instanceof Inet6Address) {
           logger.warn(LocalizedMessage
               .create(LocalizedStrings.AcceptorImpl_IGNORING_MAX_THREADS_DUE_TO_JROCKIT_NIO_BUG));
           tmp_maxThreads = 0;
@@ -345,7 +324,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         tmp_q = new LinkedBlockingQueue();
         tmp_commQ = new LinkedBlockingQueue();
         tmp_hs = new HashSet(512);
-        tmp_timer = new SystemTimer(acceptorConfiguration.getInternalCache().getDistributedSystem(), true);
+        tmp_timer = new SystemTimer(config.getInternalCache().getDistributedSystem(), true);
       }
       this.selector = tmp_s;
       // this.tmpSel = tmp2_s;
@@ -353,11 +332,11 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       this.commBufferQueue = tmp_commQ;
       this.selectorRegistrations = tmp_hs;
       this.hsTimer = tmp_timer;
-      this.tcpNoDelay = acceptorConfiguration.isTcpNoDelay();
+      this.tcpNoDelay = config.isTcpNoDelay();
     }
 
     {
-      if (!acceptorConfiguration.isGatewayReceiver()) {
+      if (!config.isGatewayReceiver()) {
         // If configured use SSL properties for cache-server
         this.socketCreator =
             SocketCreatorFactory.getSocketCreatorForComponent(SecurableCommunicationChannel.SERVER);
@@ -388,14 +367,15 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         // Set the receive buffer size before binding the socket so that large
         // buffers will be allocated on accepted sockets (see
         // java.net.ServerSocket.setReceiverBufferSize javadocs)
-        this.serverSock.setReceiveBufferSize(acceptorConfiguration.getSocketBufferSize());
+        this.serverSock.setReceiveBufferSize(config.getSocketBufferSize());
 
         // fix for bug 36617. If BindException is thrown, retry after
         // sleeping. The server may have been stopped and then
         // immediately restarted, which sometimes results in a bind exception
         for (;;) {
           try {
-            this.serverSock.bind(new InetSocketAddress(getBindAddress(), acceptorConfiguration.getPort()), backLog);
+            this.serverSock.bind(
+                new InetSocketAddress(this.config.getBindAddress(), config.getPort()), backLog);
             break;
           } catch (SocketException b) {
             if (!treatAsBindException(b) || System.currentTimeMillis() > tilt) {
@@ -424,8 +404,9 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         // immediately restarted, which sometimes results in a bind exception
         for (;;) {
           try {
-            this.serverSock = this.socketCreator.createServerSocket(acceptorConfiguration.getPort(), backLog, getBindAddress(),
-                this.gatewayTransportFilters, acceptorConfiguration.getSocketBufferSize());
+            this.serverSock = this.socketCreator.createServerSocket(config.getPort(), backLog,
+                this.config.getBindAddress(), this.gatewayTransportFilters,
+                config.getSocketBufferSize());
             break;
           } catch (SocketException e) {
             if (!treatAsBindException(e) || System.currentTimeMillis() > tilt) {
@@ -449,7 +430,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
         } // for
       } // !isSelector
 
-      int tmpPort = acceptorConfiguration.getPort();
+      int tmpPort = config.getPort();
 
       if (tmpPort == 0) {
         tmpPort = this.serverSock.getLocalPort();
@@ -470,7 +451,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       logger.info(LocalizedMessage.create(
           LocalizedStrings.AcceptorImpl_CACHE_SERVER_CONNECTION_LISTENER_BOUND_TO_ADDRESS_0_WITH_BACKLOG_1,
           new Object[] {sockName, Integer.valueOf(backLog)}));
-      if (acceptorConfiguration.isGatewayReceiver()) {
+      if (config.isGatewayReceiver()) {
         this.stats = GatewayReceiverStats.createGatewayReceiverStats(sockName);
       } else {
         this.stats = new CacheServerStats(sockName);
@@ -478,16 +459,18 @@ public class AcceptorImpl extends Acceptor implements Runnable {
 
     }
 
-    this.cache = acceptorConfiguration.getInternalCache();
+    this.cache = config.getInternalCache();
     this.crHelper = new CachedRegionHelper(this.cache);
 
-    this.clientNotifier = CacheClientNotifier.getInstance(cache, this.stats, acceptorConfiguration.getMaximumMessageCount(),
-      acceptorConfiguration.getMessageTimeToLive(), connectionListener, acceptorConfiguration.getOverflowAttributesList(), acceptorConfiguration.isGatewayReceiver());
-    this.socketBufferSize = acceptorConfiguration.getSocketBufferSize();
+    this.clientNotifier =
+        CacheClientNotifier.getInstance(cache, this.stats, config.getMaximumMessageCount(),
+            config.getMessageTimeToLive(), this.config.getConnectionListener(),
+            config.getOverflowAttributesList(), config.isGatewayReceiver());
+    this.socketBufferSize = config.getSocketBufferSize();
 
     // Create the singleton ClientHealthMonitor
-    this.healthMonitor = ClientHealthMonitor.getInstance(acceptorConfiguration.getInternalCache(), acceptorConfiguration.getMaximumTimeBetweenPings(),
-        this.clientNotifier.getStats());
+    this.healthMonitor = ClientHealthMonitor.getInstance(config.getInternalCache(),
+        config.getMaximumTimeBetweenPings(), this.clientNotifier.getStats());
 
     {
       ThreadPoolExecutor tmp_pool = null;
@@ -1496,14 +1479,14 @@ public class AcceptorImpl extends Acceptor implements Runnable {
       }
       // try {
       AcceptorImpl.this.clientNotifier.registerClient(s, true, this.acceptorId,
-          this.notifyBySubscription);
+          config.isNotifyBySubscription());
     } else if (communicationMode == SECONDARY_SERVER_TO_CLIENT) {
       if (logger.isDebugEnabled()) {
         logger.debug(
             ":Bridge server: Initializing secondary server-to-client communication socket: {}", s);
       }
       AcceptorImpl.this.clientNotifier.registerClient(s, false, this.acceptorId,
-          this.notifyBySubscription);
+          config.isNotifyBySubscription());
     } else {
       throw new IOException("Acceptor received unknown communication mode: " + communicationMode);
     }
@@ -1628,52 +1611,12 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   }
 
   /**
-   * @param bindName the ip address or host name that this acceptor should bind to. If null or ""
-   *        then calculate it.
-   * @return the ip address or host name this acceptor will listen on. An "" if all local addresses
-   *         will be listened to.
-   * 
-   * @since GemFire 5.7
-   */
-  private static String calcBindHostName(Cache cache, String bindName) {
-    if (bindName != null && !bindName.equals("")) {
-      return bindName;
-    }
-
-    InternalDistributedSystem system = (InternalDistributedSystem) cache.getDistributedSystem();
-    DistributionConfig config = system.getConfig();
-    String hostName = null;
-
-    // Get the server-bind-address. If it is not null, use it.
-    // If it is null, get the bind-address. If it is not null, use it.
-    // Otherwise set default.
-    String serverBindAddress = config.getServerBindAddress();
-    if (serverBindAddress != null && serverBindAddress.length() > 0) {
-      hostName = serverBindAddress;
-    } else {
-      String bindAddress = config.getBindAddress();
-      if (bindAddress != null && bindAddress.length() > 0) {
-        hostName = bindAddress;
-      }
-    }
-    return hostName;
-  }
-
-  private InetAddress getBindAddress() throws IOException {
-    if (this.bindHostName == null || "".equals(this.bindHostName)) {
-      return null; // pick default local address
-    } else {
-      return InetAddress.getByName(this.bindHostName);
-    }
-  }
-
-  /**
    * Gets the address that this bridge server can be contacted on from external processes.
    * 
    * @since GemFire 5.7
    */
   public String getExternalAddress() {
-    String result = this.bindHostName;
+    String result = config.getBindHostName();
     boolean needCanonicalHostName = false;
     if (result == null || "".equals(result)) {
       needCanonicalHostName = true;
@@ -1719,7 +1662,7 @@ public class AcceptorImpl extends Acceptor implements Runnable {
   }
 
   public ConnectionListener getConnectionListener() {
-    return connectionListener;
+    return config.getConnectionListener();
   }
 
   public boolean isGatewayReceiver() {

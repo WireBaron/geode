@@ -77,30 +77,45 @@ public class AcceptorImplJUnitTest {
 
 
       try {
-        new AcceptorImpl(
-          new AcceptorConfiguration(port1, null, false, CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS, this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS - 1, CacheServer.DEFAULT_MAX_THREADS, CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE, null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
+        new AcceptorImpl(new AcceptorConfiguration(port1, null, false,
+            CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS,
+            this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS - 1, CacheServer.DEFAULT_MAX_THREADS,
+            CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE,
+            null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
         fail("Expected an IllegalArgumentExcption due to max conns < min pool size");
       } catch (IllegalArgumentException expected) {
       }
 
       try {
-        new AcceptorImpl(
-          new AcceptorConfiguration(port2, null, false, CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS, this.cache, 0, CacheServer.DEFAULT_MAX_THREADS, CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE, null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
+        new AcceptorImpl(new AcceptorConfiguration(port2, null, false,
+            CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS,
+            this.cache, 0, CacheServer.DEFAULT_MAX_THREADS,
+            CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE,
+            null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
         fail("Expected an IllegalArgumentExcption due to max conns of zero");
       } catch (IllegalArgumentException expected) {
       }
 
       try {
-        a1 = new AcceptorImpl(
-          new AcceptorConfiguration(port1, null, false, CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS, this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS, CacheServer.DEFAULT_MAX_THREADS, CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE, null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
-        a2 = new AcceptorImpl(
-          new AcceptorConfiguration(port1, null, false, CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS, this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS, CacheServer.DEFAULT_MAX_THREADS, CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE, null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
+        a1 = new AcceptorImpl(new AcceptorConfiguration(port1, null, false,
+            CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS,
+            this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS, CacheServer.DEFAULT_MAX_THREADS,
+            CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE,
+            null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
+        a2 = new AcceptorImpl(new AcceptorConfiguration(port1, null, false,
+            CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS,
+            this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS, CacheServer.DEFAULT_MAX_THREADS,
+            CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE,
+            null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
         fail("Expecetd a BindException while attaching to the same port");
       } catch (BindException expected) {
       }
 
-      a3 = new AcceptorImpl(
-        new AcceptorConfiguration(port2, null, false, CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS, this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS, CacheServer.DEFAULT_MAX_THREADS, CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE, null, null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
+      a3 = new AcceptorImpl(new AcceptorConfiguration(port2, null, false,
+          CacheServer.DEFAULT_SOCKET_BUFFER_SIZE, CacheServer.DEFAULT_MAXIMUM_TIME_BETWEEN_PINGS,
+          this.cache, AcceptorImpl.MINIMUM_MAX_CONNECTIONS, CacheServer.DEFAULT_MAX_THREADS,
+          CacheServer.DEFAULT_MAXIMUM_MESSAGE_COUNT, CacheServer.DEFAULT_MESSAGE_TIME_TO_LIVE, null,
+          null, false, Collections.EMPTY_LIST, CacheServer.DEFAULT_TCP_NO_DELAY));
       assertEquals(port2, a3.getPort());
       InternalDistributedSystem isystem =
           (InternalDistributedSystem) this.cache.getDistributedSystem();
