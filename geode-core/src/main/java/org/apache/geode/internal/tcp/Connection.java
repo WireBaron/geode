@@ -578,6 +578,9 @@ public class Connection implements Runnable {
    */
   public boolean checkForIdleTimeout() {
     if (isSocketClosed()) {
+      if (isReceiver) {
+        owner.removeReceiver(this);
+      }
       return true;
     }
     if (isSocketInUse() || (this.sharedResource && !this.preserveOrder)) { // shared/unordered
@@ -1501,6 +1504,10 @@ public class Connection implements Runnable {
   @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "TLW_TWO_LOCK_WAIT")
   private void close(String reason, boolean cleanupEndpoint, boolean p_removeEndpoint,
       boolean beingSick, boolean forceRemoval) {
+    logger.info("============ close connection ======= " + cleanupEndpoint + " " + isReceiver);
+
+    //logger.info("we are in conn close " , new RuntimeException());
+
     boolean removeEndpoint = p_removeEndpoint;
     // use getAndSet outside sync on this to fix 42330
     boolean onlyCleanup = this.closing.getAndSet(true);

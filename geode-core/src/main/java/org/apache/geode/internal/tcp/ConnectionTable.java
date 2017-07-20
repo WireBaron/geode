@@ -114,13 +114,41 @@ public class ConnectionTable {
    * acks, will be put in this map.
    */
   protected final Map unorderedConnectionMap = new ConcurrentHashMap();
+
+  class HelperList<E> extends ArrayList<E> {
+    public HelperList() { super(); }
+    @Override
+    public boolean add(E e) {
+      System.out.println("+++++++++++++++++++ Adding element, new size = " + size());
+      return super.add(e);
+    }
+    @Override
+    public void add(int index, E element) {
+      System.out.println("+++++++++++++++++++ Adding element, new size = " + size());
+      super.add(index, element);
+    }
+    @Override
+    public E remove(int index) {
+      System.out.println("+++++++++++++++++++ Removing element, current size = " + size());
+      logger.info("removing element " , new RuntimeException());
+      return super.remove(index);
+    }
+    @Override
+    public boolean remove(Object o) {
+      System.out.println("+++++++++++++++++++ Removing element, current size = " + size());
+
+      logger.info("removing element " , new RuntimeException());
+      return super.remove(o);
+    }
+  }
+
   /**
    * Used for all accepted connections. These connections are read only; we never send messages,
    * except for acks; only receive.
    * 
    * Consists of a list of Connection
    */
-  private final List receivers = new ArrayList();
+  private final List receivers = new HelperList();
 
   /**
    * the conduit for this table
@@ -764,6 +792,7 @@ public class ConnectionTable {
    * @param beingSick a test hook to simulate a sick process
    */
   protected void closeReceivers(boolean beingSick) {
+//    System.out.println("==== closing the receivers " + this.receivers.size());
     synchronized (this.receivers) {
       for (Iterator it = this.receivers.iterator(); it.hasNext();) {
         Connection con = (Connection) it.next();
@@ -788,6 +817,7 @@ public class ConnectionTable {
         }
       }
     }
+//    System.out.println("==== closing the receivers " + this.receivers.size());
   }
 
 
