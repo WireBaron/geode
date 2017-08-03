@@ -74,7 +74,7 @@ public class PutAllRequestOperationHandlerJUnitTest extends OperationHandlerJUni
     PutAllRequestOperationHandler operationHandler = new PutAllRequestOperationHandler();
 
     Result<RegionAPI.PutAllResponse> result = operationHandler.process(serializationServiceStub,
-        generateTestRequest(false, true), cacheStub);
+        generateTestRequest(false, true), executionContext);
 
     Assert.assertTrue(result instanceof Success);
 
@@ -88,7 +88,7 @@ public class PutAllRequestOperationHandlerJUnitTest extends OperationHandlerJUni
     PutAllRequestOperationHandler operationHandler = new PutAllRequestOperationHandler();
 
     Result<RegionAPI.PutAllResponse> result = operationHandler.process(serializationServiceStub,
-        generateTestRequest(true, true), cacheStub);
+        generateTestRequest(true, true), executionContext);
 
     assertTrue(result instanceof Success);
     verify(regionMock).put(TEST_KEY1, TEST_VALUE1);
@@ -107,7 +107,7 @@ public class PutAllRequestOperationHandlerJUnitTest extends OperationHandlerJUni
     PutAllRequestOperationHandler operationHandler = new PutAllRequestOperationHandler();
 
     Result<RegionAPI.PutAllResponse> result = operationHandler.process(serializationServiceStub,
-        generateTestRequest(false, false), cacheStub);
+        generateTestRequest(false, false), executionContext);
 
     assertTrue(result instanceof Success);
 

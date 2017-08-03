@@ -64,7 +64,7 @@ public class PutRequestOperationHandlerJUnitTest extends OperationHandlerJUnitTe
       CodecNotRegisteredForTypeException, CodecAlreadyRegisteredForTypeException {
     PutRequestOperationHandler operationHandler = new PutRequestOperationHandler();
     Result<RegionAPI.PutResponse> result =
-        operationHandler.process(serializationServiceStub, generateTestRequest(), cacheStub);
+        operationHandler.process(serializationServiceStub, generateTestRequest(), executionContext);
 
     Assert.assertTrue(result instanceof Success);
 
@@ -95,7 +95,7 @@ public class PutRequestOperationHandlerJUnitTest extends OperationHandlerJUnitTe
     RegionAPI.PutRequest putRequest =
         ProtobufRequestUtilities.createPutRequest(TEST_REGION, testEntry).getPutRequest();
     Result<RegionAPI.PutResponse> result =
-        operationHandler.process(serializationServiceStub, putRequest, cacheStub);
+        operationHandler.process(serializationServiceStub, putRequest, executionContext);
 
     Assert.assertTrue(result instanceof Failure);
     org.junit.Assert.assertEquals(exceptionText, result.getErrorMessage().getMessage());
@@ -107,7 +107,7 @@ public class PutRequestOperationHandlerJUnitTest extends OperationHandlerJUnitTe
     when(cacheStub.getRegion(TEST_REGION)).thenReturn(null);
     PutRequestOperationHandler operationHandler = new PutRequestOperationHandler();
     Result<RegionAPI.PutResponse> result =
-        operationHandler.process(serializationServiceStub, generateTestRequest(), cacheStub);
+        operationHandler.process(serializationServiceStub, generateTestRequest(), executionContext);
 
     Assert.assertTrue(result instanceof Failure);
     org.junit.Assert.assertEquals("Region passed by client did not exist: test region",
@@ -121,7 +121,7 @@ public class PutRequestOperationHandlerJUnitTest extends OperationHandlerJUnitTe
 
     PutRequestOperationHandler operationHandler = new PutRequestOperationHandler();
     Result<RegionAPI.PutResponse> result =
-        operationHandler.process(serializationServiceStub, generateTestRequest(), cacheStub);
+        operationHandler.process(serializationServiceStub, generateTestRequest(), executionContext);
 
     Assert.assertTrue(result instanceof Failure);
     org.junit.Assert.assertThat(result.getErrorMessage().getMessage(),

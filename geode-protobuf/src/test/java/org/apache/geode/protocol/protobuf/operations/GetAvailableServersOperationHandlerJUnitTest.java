@@ -54,7 +54,6 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
     super.setUp();
 
     operationHandler = mock(GetAvailableServersOperationHandler.class);
-    cacheStub = mock(GemFireCacheImpl.class);
     when(operationHandler.process(any(), any(), any())).thenCallRealMethod();
     InternalDistributedSystem mockDistributedSystem = mock(InternalDistributedSystem.class);
     when(cacheStub.getDistributedSystem()).thenReturn(mockDistributedSystem);
@@ -80,7 +79,7 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
     ServerAPI.GetAvailableServersRequest getAvailableServersRequest =
         ProtobufRequestUtilities.createGetAvailableServersRequest();
     Result operationHandlerResult =
-        operationHandler.process(serializationServiceStub, getAvailableServersRequest, cacheStub);
+        operationHandler.process(serializationServiceStub, getAvailableServersRequest, executionContext);
     assertTrue(operationHandlerResult instanceof Success);
     ValidateGetAvailableServersResponse(
         (GetAvailableServersResponse) operationHandlerResult.getMessage());
@@ -100,7 +99,7 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
     ServerAPI.GetAvailableServersRequest getAvailableServersRequest =
         ProtobufRequestUtilities.createGetAvailableServersRequest();
     Result operationHandlerResult =
-        operationHandler.process(serializationServiceStub, getAvailableServersRequest, cacheStub);
+        operationHandler.process(serializationServiceStub, getAvailableServersRequest, executionContext);
     assertTrue(operationHandlerResult instanceof Success);
     ValidateGetAvailableServersResponse(
         (GetAvailableServersResponse) operationHandlerResult.getMessage());
@@ -125,7 +124,7 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
     ServerAPI.GetAvailableServersRequest getAvailableServersRequest =
         ProtobufRequestUtilities.createGetAvailableServersRequest();
     Result operationHandlerResult =
-        operationHandler.process(serializationServiceStub, getAvailableServersRequest, cacheStub);
+        operationHandler.process(serializationServiceStub, getAvailableServersRequest, executionContext);
     assertTrue(operationHandlerResult instanceof Failure);
   }
 }
