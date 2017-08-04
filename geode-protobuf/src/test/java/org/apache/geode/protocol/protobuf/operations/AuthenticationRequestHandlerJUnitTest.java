@@ -16,6 +16,7 @@
 package org.apache.geode.protocol.protobuf.operations;
 
 import org.apache.geode.protocol.protobuf.AuthenticationAPI;
+import org.apache.geode.protocol.protobuf.BasicTypes;
 import org.apache.geode.protocol.protobuf.Failure;
 import org.apache.geode.protocol.protobuf.Result;
 import org.apache.geode.protocol.protobuf.Success;
@@ -36,45 +37,34 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Category(UnitTest.class)
-public class AuthenticationHandshakeRequestHandlerJUnitTest extends OperationHandlerJUnitTest {
+public class AuthenticationRequestHandlerJUnitTest extends OperationHandlerJUnitTest {
   @Before
   public void setup() throws Exception {
     super.setUp();
 
-    operationHandler = new AuthenticationHandshakeRequestHandler();
+    operationHandler = new AuthenticationRequestHandler();
   }
 
   @Test
-  public void respondsWithAuthenticationHandshakeResponse() {
-    when(authenticationContextStub.handleAuthenticationHandshake(any())).thenReturn("PLAIN");
+  public void authenticatesWithEmptyResponseFromContext() {
+    when(authenticationContextStub.handleAuthenticationRequest(any())).thenReturn(new Object[0]);
 
-    AuthenticationAPI.AuthenticationHandshakeRequest
-        handshakeRequest =
-        AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism("PLAIN").build();
+    AuthenticationAPI.AuthenticationRequest
+        authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder().addAuthenticationParams(BasicTypes.EncodedValue.newBuilder().setStringResult("param1")).addAuthenticationParams(BasicTypes.EncodedValue.newBuilder().setIntResult(42)).build();
 
-    Result handlerResult = operationHandler.process(serializationServiceStub, handshakeRequest, executionContext);
+    Result handlerResult = operationHandler.process(serializationServiceStub, authenticationRequest, executionContext);
 
-    ArgumentCaptor<Iterable<String>> mechanismCaptor = ArgumentCaptor.forClass(Iterable.class);
     assertTrue(handlerResult instanceof Success);
-    AuthenticationAPI.AuthenticationHandshakeResponse authenticationHandshakeResponse = (AuthenticationAPI.AuthenticationHandshakeResponse)handlerResult.getMessage();
+    AuthenticationAPI.AuthenticationResponse authenticationResponse = (AuthenticationAPI.AuthenticationResponse)handlerResult.getMessage();
+    assertEquals(0, authenticationResponse.getChallengeParamsCount());
 
-    assertEquals("PLAIN", authenticationHandshakeResponse.getMechanism());
-    verify(authenticationContextStub, times(1)).handleAuthenticationHandshake(mechanismCaptor.capture());
-    Iterable<String> caughtMechanisms = mechanismCaptor.getValue();
-    Iterator<String> iterator = caughtMechanisms.iterator();
-    assertEquals("PLAIN", iterator.next());
+    ArgumentCaptor<Iterable<Object>> argumentCaptor = ArgumentCaptor.forClass(Iterable.class);
+    verify(authenticationContextStub, times(1)).handleAuthenticationRequest(argumentCaptor.capture());
+    Iterable<Object> caughtArguments = argumentCaptor.getValue();
+    Iterator<Object> iterator = caughtArguments.iterator();
+    assertEquals("param1", (String)iterator.next());
+    assertEquals((Integer)42, (Integer) iterator.next());
     assertFalse(iterator.hasNext());
-  }
-
-  @Test
-  public void respondsWithAErrorWhenContextCantFindMechanism() {
-    when(authenticationContextStub.handleAuthenticationHandshake(any())).thenReturn(null);
-
-    AuthenticationAPI.AuthenticationHandshakeRequest
-        handshakeRequest =
-        AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism("PLAIN").build();
-
-    Result handlerResult = operationHandler.process(serializationServiceStub, handshakeRequest, executionContext);
-    assertTrue(handlerResult instanceof Failure);
   }
 }
