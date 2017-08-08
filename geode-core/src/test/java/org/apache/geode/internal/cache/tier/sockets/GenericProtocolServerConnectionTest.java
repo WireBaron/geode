@@ -20,24 +20,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.apache.geode.internal.cache.InternalCache;
 import org.apache.geode.internal.cache.tier.Acceptor;
 import org.apache.geode.internal.cache.tier.CachedRegionHelper;
-import org.apache.geode.internal.cache.tier.sockets.sasl.AuthenticationContext;
-import org.apache.geode.internal.cache.tier.sockets.sasl.AuthenticationService;
 import org.apache.geode.internal.security.SecurityService;
 import org.apache.geode.test.junit.categories.UnitTest;
 
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -60,7 +54,7 @@ public class GenericProtocolServerConnectionTest {
 //  public void testAuthenticationSuccess() throws IOException {
 //    GenericServerConnectionBuilder builder = new GenericServerConnectionBuilder();
 //    when(builder.mockAuthenticationService.process(any(), any())).thenReturn(
-//        AuthenticationService.AuthenticationProgress.AUTHENTICATION_COMPLETE
+//        AuthenticationService.AuthenticationProgress.AUTHENTICATION_SUCCEEDED
 //    );
 //
 //    GenericProtocolServerConnection testConnection = builder.buildConnection();
@@ -121,7 +115,7 @@ public class GenericProtocolServerConnectionTest {
 //    public AcceptorImpl stubAcceptor;
 //    public ClientProtocolMessageHandler stubClientProtocolMessageHandler;
 //    public SecurityService stubSecurityService;
-//    public AuthenticationContext mockAuthenticationService;
+//    public Authenticator mockAuthenticationService;
 //
 //    public GenericServerConnectionBuilder() throws IOException {
 //      stubOutputStream = mock(OutputStream.class);

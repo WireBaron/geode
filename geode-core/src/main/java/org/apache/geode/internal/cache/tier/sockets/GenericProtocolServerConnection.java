@@ -18,7 +18,7 @@ package org.apache.geode.internal.cache.tier.sockets;
 import org.apache.geode.internal.cache.InternalCache;
 import org.apache.geode.internal.cache.tier.Acceptor;
 import org.apache.geode.internal.cache.tier.CachedRegionHelper;
-import org.apache.geode.internal.cache.tier.sockets.sasl.AuthenticationContext;
+import org.apache.geode.internal.cache.tier.sockets.sasl.Authenticator;
 import org.apache.geode.internal.cache.tier.sockets.sasl.ExecutionContext;
 import org.apache.geode.internal.security.SecurityService;
 
@@ -43,10 +43,10 @@ public class GenericProtocolServerConnection extends ServerConnection {
                                          byte communicationMode, Acceptor acceptor,
                                          ClientProtocolMessageHandler newClientProtocol,
                                          SecurityService securityService,
-                                         AuthenticationContext authenticationContext) {
+                                         Authenticator authenticator) {
     super(socket, internalCache, helper, stats, hsTimeout, socketBufferSize, communicationModeStr, communicationMode,
         acceptor, securityService);
-    this.executionContext = new ExecutionContext(internalCache, authenticationContext);
+    this.executionContext = new ExecutionContext(internalCache, authenticator);
     this.messageHandler = newClientProtocol;
   }
 
@@ -58,7 +58,7 @@ public class GenericProtocolServerConnection extends ServerConnection {
       OutputStream outputStream = socket.getOutputStream();
 //      if(!isAuthenticated) {
 //        AuthenticationService.AuthenticationProgress authenticationProgress = this.authenticationContext.process(inputStream, outputStream);
-//        if (authenticationProgress == AuthenticationService.AuthenticationProgress.AUTHENTICATION_COMPLETE) {
+//        if (authenticationProgress == AuthenticationService.AuthenticationProgress.AUTHENTICATION_SUCCEEDED) {
 //          isAuthenticated = true;
 //        } else if (authenticationProgress == AuthenticationService.AuthenticationProgress.AUTHENTICATION_FAILED) {
 //          this.setFlagProcessMessagesAsFalse(); // TODO: better shutdown.

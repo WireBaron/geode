@@ -24,7 +24,7 @@ public class SaslPlainServer implements SaslServer{
 
   @Override
   public String getMechanismName() {
-    return null;
+    return "PLAIN";
   }
 
   @Override

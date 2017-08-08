@@ -18,6 +18,7 @@ package org.apache.geode.internal.cache.tier.sockets;
 import org.apache.geode.internal.cache.InternalCache;
 import org.apache.geode.internal.cache.tier.Acceptor;
 import org.apache.geode.internal.cache.tier.CachedRegionHelper;
+import org.apache.geode.internal.cache.tier.sockets.sasl.SaslAuthenticator;
 import org.apache.geode.internal.security.SecurityService;
 
 import java.io.IOException;
@@ -74,7 +75,7 @@ public class ServerConnectionFactory {
         protobufProtocolHandler = findClientProtocolMessageHandler();
         return new GenericProtocolServerConnection(s, c, helper, stats, hsTimeout, socketBufferSize,
             communicationModeStr, communicationMode, acceptor, protobufProtocolHandler,
-            securityService, null);
+            securityService, new SaslAuthenticator(securityService.getSecurityManager()));
       }
     } else {
       return new LegacyServerConnection(s, c, helper, stats, hsTimeout, socketBufferSize,

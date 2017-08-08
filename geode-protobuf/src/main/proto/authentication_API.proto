@@ -31,10 +31,11 @@ message AuthenticationRequest {
 }
 
 message AuthenticationResponse {
-    AuthenticationResult = 1;
+    AuthenticationResult authenticationResult = 1;
 }
 
 enum AuthenticationResult {
-    SUCCESS = 0;
-    INVALID = 1;
+    AUTH_INVALID = 0;
+    AUTH_SUCCESS = 1;
+    AUTH_INPROGRESS = 2;
 }

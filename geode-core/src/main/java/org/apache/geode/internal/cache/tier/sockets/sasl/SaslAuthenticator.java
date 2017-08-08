@@ -16,9 +16,12 @@
 package org.apache.geode.internal.cache.tier.sockets.sasl;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Optional;
 
 import javax.security.sasl.SaslServer;
 
+import org.apache.geode.security.SecurityManager;
 import org.apache.logging.log4j.Logger;
 
 import org.apache.geode.internal.logging.LogService;
@@ -26,27 +29,29 @@ import org.apache.geode.internal.logging.LogService;
 /**
  * SaslAuthenticator performs simple authentication using SASL
  */
-public class SaslAuthenticator {
+public class SaslAuthenticator implements Authenticator {
   protected static final Logger logger = LogService.getLogger();
+  private SecurityManager securityManager;
 
-  private final SaslServer saslServer;
-  private final SaslMessenger saslMessenger;
-
-  public SaslAuthenticator(SaslServer saslServer, SaslMessenger saslMessenger) {
-    this.saslServer = saslServer;
-    this.saslMessenger = saslMessenger;
+  public SaslAuthenticator(SecurityManager securityManager) {
+    this.securityManager = securityManager;
   }
 
   public boolean authenticateClient() {
-    try {
-      byte[] response = saslMessenger.readMessage();
-      saslServer.evaluateResponse(response);
+    return false;
+  }
 
-      return true;
-    } catch (IOException e) {
-      logger.warn("client authentication failed", e);
-
-      return false;
+  @Override
+  public Optional<String> handleHandshakeRequest(Collection<String> mechanisms) {
+    if (mechanisms.contains("PLAIN")) {
+      return Optional.of("PLAIN");
+    } else {
+      return Optional.empty();
     }
+  }
+
+  @Override
+  public AuthenticationProgress handleAuthenticationRequest(Collection<Object> parameters) {
+    return null;
   }
 }

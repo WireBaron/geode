@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.experimental.categories.Category;
 
 import org.apache.geode.cache.Cache;
-import org.apache.geode.internal.cache.tier.sockets.sasl.AuthenticationContext;
+import org.apache.geode.internal.cache.tier.sockets.sasl.Authenticator;
 import org.apache.geode.internal.cache.tier.sockets.sasl.ExecutionContext;
 import org.apache.geode.protocol.operations.OperationHandler;
 import org.apache.geode.serialization.SerializationService;
@@ -29,7 +29,7 @@ import org.apache.geode.test.junit.categories.UnitTest;
 @Category(UnitTest.class)
 public class OperationHandlerJUnitTest {
   protected Cache cacheStub;
-  protected AuthenticationContext authenticationContextStub;
+  protected Authenticator authenticatorStub;
   protected ExecutionContext executionContext;
   protected SerializationService serializationServiceStub;
   protected OperationHandler operationHandler;
@@ -37,8 +37,8 @@ public class OperationHandlerJUnitTest {
   @Before
   public void setUp() throws Exception {
     cacheStub = mock(Cache.class);
-    authenticationContextStub = mock(AuthenticationContext.class);
-    executionContext = new ExecutionContext(cacheStub, authenticationContextStub);
+    authenticatorStub = mock(Authenticator.class);
+    executionContext = new ExecutionContext(cacheStub, authenticatorStub);
     serializationServiceStub = mock(SerializationService.class);
   }
 }

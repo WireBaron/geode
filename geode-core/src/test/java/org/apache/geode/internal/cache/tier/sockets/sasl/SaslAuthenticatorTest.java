@@ -23,95 +23,47 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 
+import org.apache.geode.security.SecurityManager;
+import org.eclipse.jetty.util.ArrayUtil;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
-import org.apache.geode.internal.security.SecurityService;
 import org.apache.geode.test.junit.categories.UnitTest;
 
 @Category(UnitTest.class)
 public class SaslAuthenticatorTest {
-  @Test
-  public void authenticateClientPassesResponsesToSaslServerTillComplete() throws Exception {
-    SaslServer saslServerMock = mock(SaslServer.class);
-    SaslMessenger saslMessengerStub = mock(SaslMessenger.class);
-    SaslAuthenticator
-        saslServer = new SaslAuthenticator(saslServerMock, saslMessengerStub);
-    ArgumentCaptor<byte[]> saslServerArgumentCaptor = ArgumentCaptor.forClass(byte[].class);
-    ArgumentCaptor<byte[]> messengerArgumentCaptor = ArgumentCaptor.forClass(byte[].class);
-    byte[][] challengesFromServer = {
-        new byte[] {0, 1, 2},
-        new byte[0],
-    };
-    when(saslServerMock.evaluateResponse(isA(byte[].class))).thenReturn(challengesFromServer[0],
-        challengesFromServer[1]);
-    when(saslServerMock.isComplete()).thenReturn(true);
-    when(saslMessengerStub.readMessage()).thenReturn(new byte[] {6, 7, 8});
 
-    boolean authenticateClient = saslServer.authenticateClient();
+  private SecurityManager securityManager;
+  private SaslAuthenticator saslAuthenticator;
 
-    verify(saslServerMock, times(1)).evaluateResponse(saslServerArgumentCaptor.capture());
-    verify(saslMessengerStub, times(0)).sendMessage(messengerArgumentCaptor.capture());
-    assertTrue(authenticateClient);
-
-//    List<byte[]> sentMessages = messengerArgumentCaptor.getAllValues();
-//    assertEquals(1, sentMessages.size());
-//    assertArrayEquals(challengesFromServer[0], sentMessages.get(0));
-
-    List<byte[]> passedResponses = saslServerArgumentCaptor.getAllValues();
-    assertEquals(1, passedResponses.size());
-    assertArrayEquals(new byte[] {6, 7, 8}, passedResponses.get(0)); // response from client
-
-    verify(saslMessengerStub, times(1)).readMessage();
+  @Before
+  public void setUp() throws Exception {
+    securityManager = mock(SecurityManager.class);
+    saslAuthenticator = new SaslAuthenticator(securityManager);
   }
 
   @Test
-  public void authenticateClientReturnsFalseIfCredentialsAreWrong() throws IOException {
-    SaslServer saslServerMock = mock(SaslServer.class);
-    SaslMessenger saslMessengerStub = mock(SaslMessenger.class);
-    SaslAuthenticator
-        saslAuthenticator = new SaslAuthenticator(saslServerMock, saslMessengerStub);
-    ArgumentCaptor<byte[]> saslServerArgumentCaptor = ArgumentCaptor.forClass(byte[].class);
-    ArgumentCaptor<byte[]> messengerArgumentCaptor = ArgumentCaptor.forClass(byte[].class);
-    byte[][] challengesFromServer = {
-        new byte[] {0, 1, 2},
-        new byte[0],
-    };
-    when(saslServerMock.evaluateResponse(isA(byte[].class))).thenThrow(new SaslException("Invalid response"));
-    when(saslServerMock.isComplete()).thenReturn(false);
-    when(saslMessengerStub.readMessage()).thenReturn(new byte[] {6, 7, 8});
-
-    boolean clientIsAuthenticated = saslAuthenticator.authenticateClient();
-
-    assertFalse(clientIsAuthenticated);
-
-    verify(saslServerMock, times(1)).evaluateResponse(saslServerArgumentCaptor.capture());
-//    verify(saslMessengerStub, times(1)).sendMessage(messengerArgumentCaptor.capture());
-//    assertFalse(clientIsAuthenticated);
+  public void respondsToHandshakeWithSelectedMechanism() {
+    Collection<String> requestedMechanisms = Arrays.asList(new String[] {"MD5", "WD40", "PLAIN", "foo"});
+    Optional<String> handshakeResult = saslAuthenticator.handleHandshakeRequest(requestedMechanisms);
+    assertTrue(handshakeResult.isPresent());
+    assertEquals("PLAIN", handshakeResult.get());
   }
 
   @Test
-  public void authenticateClientReturnsFalseIfClientStopsResponding() throws IOException {
-    SaslServer saslServerMock = mock(SaslServer.class);
-    SaslMessenger saslMessengerStub = mock(SaslMessenger.class);
-    SaslAuthenticator
-            saslServer = new SaslAuthenticator(saslServerMock, saslMessengerStub);
-    byte[][] challengesFromServer = {
-            new byte[] {0, 1, 2},
-            new byte[0],
-    };
-    when(saslServerMock.evaluateResponse(isA(byte[].class))).thenReturn(challengesFromServer[0]).thenReturn(new byte[0]);
-    when(saslServerMock.isComplete()).thenReturn(false);
-    when(saslMessengerStub.readMessage()).thenThrow(new SocketTimeoutException());
-
-    boolean authenticateClient = saslServer.authenticateClient();
-
-    assertFalse(authenticateClient);
+  public void emptyResultToHandshakeWithNoValidMechanism() {
+    Collection<String> requestedMechanisms = Arrays.asList(new String[] {"MD5", "WD40", "foo"});
+    Optional<String> handshakeResult = saslAuthenticator.handleHandshakeRequest(requestedMechanisms);
+    assertFalse(handshakeResult.isPresent());
   }
 }

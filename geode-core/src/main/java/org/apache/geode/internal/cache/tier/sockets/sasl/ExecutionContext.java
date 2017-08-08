@@ -4,19 +4,19 @@ import org.apache.geode.cache.Cache;
 
 public class ExecutionContext {
   private final Cache cache;
-  private final AuthenticationContext authenticationContext;
+  private final Authenticator authenticator;
 
   public ExecutionContext(Cache cache,
-                          AuthenticationContext authenticationContext) {
+                          Authenticator authenticator) {
     this.cache = cache;
-    this.authenticationContext = authenticationContext;
+    this.authenticator = authenticator;
   }
 
   public Cache getCache() {
     return cache;
   }
 
-  public AuthenticationContext getAuthenticationContext() {
-    return authenticationContext;
+  public Authenticator getAuthenticator() {
+    return authenticator;
   }
 }

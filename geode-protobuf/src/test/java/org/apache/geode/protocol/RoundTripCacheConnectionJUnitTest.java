@@ -25,7 +25,6 @@ import org.apache.geode.distributed.ConfigurationProperties;
 import org.apache.geode.internal.AvailablePortHelper;
 import org.apache.geode.internal.admin.SSLConfig;
 import org.apache.geode.internal.cache.tier.sockets.GenericProtocolServerConnection;
-import org.apache.geode.internal.cache.tier.sockets.sasl.message.HandshakeRequest;
 import org.apache.geode.internal.net.SocketCreator;
 import org.apache.geode.internal.net.SocketCreatorFactory;
 import org.apache.geode.protocol.exception.InvalidProtocolMessageException;
@@ -44,7 +43,6 @@ import org.apache.geode.serialization.registry.exception.CodecNotRegisteredForTy
 import org.apache.geode.test.junit.categories.IntegrationTest;
 import org.apache.geode.util.test.TestUtil;
 
-import com.sun.deploy.util.SessionState;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Assert;
@@ -78,7 +76,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import javax.security.auth.callback.*;
-import javax.security.sasl.Sasl;
 
 /**
  * Test that switching on the header byte makes instances of
@@ -162,7 +159,6 @@ public class RoundTripCacheConnectionJUnitTest {
 
   @Test
   public void testNewProtocolHeaderLeadsToNewProtocolServerConnection() throws Exception {
-    authenicateClient(socket, "secretsecret");
     ClientProtocol.Message putMessage =
         MessageUtil.makePutRequestMessage(serializationService, TEST_KEY, TEST_VALUE, TEST_REGION,
             ProtobufUtilities.createMessageHeader(TEST_PUT_CORRELATION_ID));
@@ -179,6 +175,52 @@ public class RoundTripCacheConnectionJUnitTest {
   public void testNewProtocolFailsToAuthenticate() throws Exception {
 //    int response = authenicateClient(socket, "wrongPassword");
 //    assertEquals(Acceptor.UNSUCCESSFUL_SERVER_TO_CLIENT, response);
+  }
+
+  @Test
+  public void testSaslAuthenticationWithPlainText() throws Exception {
+    OutputStream outputStream1 = socket.getOutputStream();
+    InputStream inputStream = socket.getInputStream();
+
+    String mechanism = "PLAIN";
+    AuthenticationAPI.AuthenticationHandshakeRequest.Builder
+        handshakeRequest =
+        AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism(mechanism);
+    ClientProtocol.Message
+        message =
+        ClientProtocol.Message.newBuilder().setRequest(
+            ClientProtocol.Request.newBuilder().setAuthenticationHandshakeRequest(handshakeRequest))
+                .build();
+    protobufProtocolSerializer.serialize(message, outputStream1);
+
+    AuthenticationAPI.AuthenticationHandshakeResponse
+        authenticationHandshakeResponse =
+        protobufProtocolSerializer.deserialize(inputStream).getResponse()
+            .getAuthenticationHandshakeResponse();
+    assertEquals(mechanism, authenticationHandshakeResponse.getMechanism());
+
+    AuthenticationAPI.AuthenticationRequest.Builder
+        authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder().addAuthenticationParam(
+            BasicTypes.EncodedValue.newBuilder().setStringResult("myId").build()
+        ).addAuthenticationParam(
+            BasicTypes.EncodedValue.newBuilder().setStringResult("bob").build()
+        ).addAuthenticationParam(
+            BasicTypes.EncodedValue.newBuilder().setStringResult("bobsPassword").build()
+        );
+
+    ClientProtocol.Message authenticationMessage = ClientProtocol.Message.newBuilder()
+        .setRequest(ClientProtocol.Request.newBuilder().setAuthenticationRequest(
+            authenticationRequest)
+        ).build();
+
+    protobufProtocolSerializer.serialize(authenticationMessage, outputStream1);
+
+    AuthenticationAPI.AuthenticationResponse
+        authenticationResponse =
+        protobufProtocolSerializer.deserialize(inputStream).getResponse()
+            .getAuthenticationResponse();
+    assertEquals(AuthenticationAPI.AuthenticationResult.AUTH_SUCCESS, authenticationResponse.getAuthenticationResult());
   }
 
   @Test
