@@ -38,7 +38,8 @@ public class ProtobufSerializationService implements SerializationService<BasicT
   public Object decode(BasicTypes.EncodingType encodingTypeValue, byte[] value)
       throws UnsupportedEncodingTypeException, CodecNotRegisteredForTypeException {
     if (encodingTypeValue == BasicTypes.EncodingType.INVALID) {
-      return null;
+      throw new UnsupportedEncodingTypeException(
+          "Unable to decode value with invalid encoding type. Did you forget to set the custom encoding type for your value?");
     }
     TypeCodec codecForType = getTypeCodecForProtobufType(encodingTypeValue);
     return codecForType.decode(value);

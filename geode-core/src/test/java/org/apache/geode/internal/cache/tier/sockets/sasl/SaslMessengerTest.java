@@ -27,7 +27,7 @@ public class SaslMessengerTest {
 
   @Before
   public void setup() {
-    message = new byte[]{2, 2};
+    message = new byte[] {2, 2};
     outPutArray = new byte[1000];
     outputStream = new HeapDataOutputStream(outPutArray);
     saslMessenger = new SaslMessenger(inputStream, outputStream);
@@ -36,8 +36,7 @@ public class SaslMessengerTest {
   @Test
   public void sendMessageWritesMessageToStream() throws IOException {
     saslMessenger.sendMessage(message);
-    ByteArrayInputStream
-        byteArrayInputStream =
+    ByteArrayInputStream byteArrayInputStream =
         new ByteArrayInputStream(outputStream.toByteArray());
     DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
     int arrayLength = dataInputStream.readInt();

@@ -6,8 +6,7 @@ public class ExecutionContext {
   private final Cache cache;
   private final Authenticator authenticator;
 
-  public ExecutionContext(Cache cache,
-                          Authenticator authenticator) {
+  public ExecutionContext(Cache cache, Authenticator authenticator) {
     this.cache = cache;
     this.authenticator = authenticator;
   }

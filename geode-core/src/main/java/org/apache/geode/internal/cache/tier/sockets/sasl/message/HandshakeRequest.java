@@ -10,7 +10,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
 public class HandshakeRequest {
-  public static final String VERSION="0.1";
+  public static final String VERSION = "0.1";
   private final String version;
   private final String mechanism;
   private final String clientID;

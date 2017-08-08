@@ -39,6 +39,7 @@ public class ProtobufStreamProcessorJUnitTest {
 
     ProtobufStreamProcessor protobufStreamProcessor = new ProtobufStreamProcessor();
     InternalCache mockInternalCache = mock(InternalCache.class);
-    protobufStreamProcessor.receiveMessage(inputStream, outputStream, new ExecutionContext(mockInternalCache, null));
+    protobufStreamProcessor.receiveMessage(inputStream, outputStream,
+        new ExecutionContext(mockInternalCache, null));
   }
 }

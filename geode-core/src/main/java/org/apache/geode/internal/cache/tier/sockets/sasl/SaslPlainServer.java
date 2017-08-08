@@ -9,7 +9,7 @@ import javax.security.sasl.SaslServer;
 import org.apache.geode.security.AuthenticationFailedException;
 import org.apache.geode.security.SecurityManager;
 
-public class SaslPlainServer implements SaslServer{
+public class SaslPlainServer implements SaslServer {
   SecurityManager securityManager;
   boolean completed = false;
   private Object principal;

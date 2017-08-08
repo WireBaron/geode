@@ -34,8 +34,7 @@ public class HandshakeRequestTest {
 
   @Test
   public void testSerialization() throws IOException {
-    HandshakeRequest
-        handshakeRequest =
+    HandshakeRequest handshakeRequest =
         new HandshakeRequest(version, correlationID, clientID, mechanism);
 
     byte[] expectedByteArray = makeMessage(version, correlationID, clientID, mechanism);
@@ -81,13 +80,13 @@ public class HandshakeRequestTest {
 
     ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
     byteArrayStream.write(versionBytes);
-    byteArrayStream.write(new byte[]{'\u0000'});
+    byteArrayStream.write(new byte[] {'\u0000'});
     byteArrayStream.write(correlationBytes);
-    byteArrayStream.write(new byte[]{'\u0000'});
+    byteArrayStream.write(new byte[] {'\u0000'});
     byteArrayStream.write(clientIDBytes);
-    byteArrayStream.write(new byte[]{'\u0000'});
+    byteArrayStream.write(new byte[] {'\u0000'});
     byteArrayStream.write(mechanismBytes);
-    byteArrayStream.write(new byte[]{'\u0000'});
+    byteArrayStream.write(new byte[] {'\u0000'});
 
     return byteArrayStream.toByteArray();
   }

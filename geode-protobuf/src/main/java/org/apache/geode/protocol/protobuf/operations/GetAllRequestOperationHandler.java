@@ -41,8 +41,7 @@ public class GetAllRequestOperationHandler
 
   @Override
   public Result<RegionAPI.GetAllResponse> process(SerializationService serializationService,
-                                                  RegionAPI.GetAllRequest request,
-                                                  ExecutionContext executionContext) {
+      RegionAPI.GetAllRequest request, ExecutionContext executionContext) {
     String regionName = request.getRegionName();
     Region region = executionContext.getCache().getRegion(regionName);
     if (region == null) {

@@ -53,16 +53,15 @@ public class HandshakeResponseTest {
     assertThat(throwable).isInstanceOf(AuthenticationException.class);
   }
 
-  public byte[] makeMessage(String correlationID, String mechanism)
-      throws IOException {
+  public byte[] makeMessage(String correlationID, String mechanism) throws IOException {
     byte[] mechanismBytes = mechanism.getBytes(Charset.forName("UTF8"));
     byte[] correlationBytes = correlationID.getBytes(Charset.forName("UTF8"));
 
     ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
     byteArrayStream.write(correlationBytes);
-    byteArrayStream.write(new byte[]{'\u0000'});
+    byteArrayStream.write(new byte[] {'\u0000'});
     byteArrayStream.write(mechanismBytes);
-    byteArrayStream.write(new byte[]{'\u0000'});
+    byteArrayStream.write(new byte[] {'\u0000'});
 
     return byteArrayStream.toByteArray();
   }

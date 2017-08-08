@@ -173,8 +173,8 @@ public class RoundTripCacheConnectionJUnitTest {
 
   @Test
   public void testNewProtocolFailsToAuthenticate() throws Exception {
-//    int response = authenicateClient(socket, "wrongPassword");
-//    assertEquals(Acceptor.UNSUCCESSFUL_SERVER_TO_CLIENT, response);
+    // int response = authenicateClient(socket, "wrongPassword");
+    // assertEquals(Acceptor.UNSUCCESSFUL_SERVER_TO_CLIENT, response);
   }
 
   @Test
@@ -183,44 +183,39 @@ public class RoundTripCacheConnectionJUnitTest {
     InputStream inputStream = socket.getInputStream();
 
     String mechanism = "PLAIN";
-    AuthenticationAPI.AuthenticationHandshakeRequest.Builder
-        handshakeRequest =
+    AuthenticationAPI.AuthenticationHandshakeRequest.Builder handshakeRequest =
         AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism(mechanism);
-    ClientProtocol.Message
-        message =
-        ClientProtocol.Message.newBuilder().setRequest(
+    ClientProtocol.Message message = ClientProtocol.Message.newBuilder()
+        .setRequest(
             ClientProtocol.Request.newBuilder().setAuthenticationHandshakeRequest(handshakeRequest))
-                .build();
+        .build();
     protobufProtocolSerializer.serialize(message, outputStream1);
 
-    AuthenticationAPI.AuthenticationHandshakeResponse
-        authenticationHandshakeResponse =
+    AuthenticationAPI.AuthenticationHandshakeResponse authenticationHandshakeResponse =
         protobufProtocolSerializer.deserialize(inputStream).getResponse()
             .getAuthenticationHandshakeResponse();
     assertEquals(mechanism, authenticationHandshakeResponse.getMechanism());
 
-    AuthenticationAPI.AuthenticationRequest.Builder
-        authenticationRequest =
-        AuthenticationAPI.AuthenticationRequest.newBuilder().addAuthenticationParam(
-            BasicTypes.EncodedValue.newBuilder().setStringResult("myId").build()
-        ).addAuthenticationParam(
-            BasicTypes.EncodedValue.newBuilder().setStringResult("bob").build()
-        ).addAuthenticationParam(
-            BasicTypes.EncodedValue.newBuilder().setStringResult("bobsPassword").build()
-        );
+    AuthenticationAPI.AuthenticationRequest.Builder authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder()
+            .addAuthenticationParam(
+                BasicTypes.EncodedValue.newBuilder().setStringResult("myId").build())
+            .addAuthenticationParam(
+                BasicTypes.EncodedValue.newBuilder().setStringResult("bob").build())
+            .addAuthenticationParam(
+                BasicTypes.EncodedValue.newBuilder().setStringResult("bobsPassword").build());
 
     ClientProtocol.Message authenticationMessage = ClientProtocol.Message.newBuilder()
-        .setRequest(ClientProtocol.Request.newBuilder().setAuthenticationRequest(
-            authenticationRequest)
-        ).build();
+        .setRequest(
+            ClientProtocol.Request.newBuilder().setAuthenticationRequest(authenticationRequest))
+        .build();
 
     protobufProtocolSerializer.serialize(authenticationMessage, outputStream1);
 
-    AuthenticationAPI.AuthenticationResponse
-        authenticationResponse =
-        protobufProtocolSerializer.deserialize(inputStream).getResponse()
-            .getAuthenticationResponse();
-    assertEquals(AuthenticationAPI.AuthenticationResult.AUTH_SUCCESS, authenticationResponse.getAuthenticationResult());
+    AuthenticationAPI.AuthenticationResponse authenticationResponse = protobufProtocolSerializer
+        .deserialize(inputStream).getResponse().getAuthenticationResponse();
+    assertEquals(AuthenticationAPI.AuthenticationResult.AUTH_SUCCESS,
+        authenticationResponse.getAuthenticationResult());
   }
 
   @Test
@@ -377,37 +372,33 @@ public class RoundTripCacheConnectionJUnitTest {
     InputStream inputStream = socket.getInputStream();
 
     String mechanism = "PLAIN";
-    AuthenticationAPI.AuthenticationHandshakeRequest.Builder
-        handshakeRequest =
+    AuthenticationAPI.AuthenticationHandshakeRequest.Builder handshakeRequest =
         AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism(mechanism);
-    ClientProtocol.Message
-        message =
-        ClientProtocol.Message.newBuilder().setRequest(
+    ClientProtocol.Message message = ClientProtocol.Message.newBuilder()
+        .setRequest(
             ClientProtocol.Request.newBuilder().setAuthenticationHandshakeRequest(handshakeRequest))
-                .build();
+        .build();
     protobufProtocolSerializer.serialize(message, outputStream);
 
-    AuthenticationAPI.AuthenticationHandshakeResponse
-        authenticationHandshakeResponse =
+    AuthenticationAPI.AuthenticationHandshakeResponse authenticationHandshakeResponse =
         protobufProtocolSerializer.deserialize(inputStream).getResponse()
             .getAuthenticationHandshakeResponse();
 
     assertEquals(mechanism, authenticationHandshakeResponse.getMechanism());
 
-    AuthenticationAPI.AuthenticationRequest.Builder
-        authenticationRequest =
-        AuthenticationAPI.AuthenticationRequest.newBuilder().addAuthenticationParam(
-            BasicTypes.EncodedValue.newBuilder().setStringResult("myId").build()
-        ).addAuthenticationParam(
-            BasicTypes.EncodedValue.newBuilder().setStringResult("bob").build()
-        ).addAuthenticationParam(
-            BasicTypes.EncodedValue.newBuilder().setStringResult("bobsPassword").build()
-        );
+    AuthenticationAPI.AuthenticationRequest.Builder authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder()
+            .addAuthenticationParam(
+                BasicTypes.EncodedValue.newBuilder().setStringResult("myId").build())
+            .addAuthenticationParam(
+                BasicTypes.EncodedValue.newBuilder().setStringResult("bob").build())
+            .addAuthenticationParam(
+                BasicTypes.EncodedValue.newBuilder().setStringResult("bobsPassword").build());
 
     ClientProtocol.Message authenticationMessage = ClientProtocol.Message.newBuilder()
-        .setRequest(ClientProtocol.Request.newBuilder().setAuthenticationRequest(
-            authenticationRequest)
-        ).build();
+        .setRequest(
+            ClientProtocol.Request.newBuilder().setAuthenticationRequest(authenticationRequest))
+        .build();
 
     protobufProtocolSerializer.serialize(authenticationMessage, outputStream);
   }
@@ -559,8 +550,7 @@ public class RoundTripCacheConnectionJUnitTest {
     }
 
     @Override
-    public void handle(Callback[] callbacks)
-            throws IOException, UnsupportedCallbackException {
+    public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
       System.out.println("ClientCallbackHandler invoked with " + callbacks.length + " callbacks");
 
       for (int i = 0; i < callbacks.length; i++) {
@@ -574,8 +564,7 @@ public class RoundTripCacheConnectionJUnitTest {
           pc.setPassword(this.password.toCharArray());
         } else if (callbacks[i] instanceof TextOutputCallback) {
         } else {
-          throw new UnsupportedCallbackException
-                  (callbacks[i], "Unrecognized Callback");
+          throw new UnsupportedCallbackException(callbacks[i], "Unrecognized Callback");
         }
       }
     }

@@ -31,7 +31,7 @@ public class GetRegionNamesRequestOperationHandler
 
   @Override
   public Result<RegionAPI.GetRegionNamesResponse> process(SerializationService serializationService,
-                                                          RegionAPI.GetRegionNamesRequest request, ExecutionContext executionContext) {
+      RegionAPI.GetRegionNamesRequest request, ExecutionContext executionContext) {
     Set<Region<?, ?>> regions = executionContext.getCache().rootRegions();
     return Success.of(ProtobufResponseUtilities.createGetRegionNamesResponse(regions));
   }

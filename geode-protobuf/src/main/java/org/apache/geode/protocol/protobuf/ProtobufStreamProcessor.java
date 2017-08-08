@@ -44,8 +44,7 @@ public class ProtobufStreamProcessor implements ClientProtocolMessageHandler {
   }
 
   public void processOneMessage(InputStream inputStream, OutputStream outputStream,
-                                ExecutionContext executionContext)
-      throws InvalidProtocolMessageException, IOException {
+      ExecutionContext executionContext) throws InvalidProtocolMessageException, IOException {
     ClientProtocol.Message message = protobufProtocolSerializer.deserialize(inputStream);
     if (message == null) {
       throw new EOFException("Tried to deserialize protobuf message at EOF");
@@ -62,7 +61,7 @@ public class ProtobufStreamProcessor implements ClientProtocolMessageHandler {
 
   @Override
   public void receiveMessage(InputStream inputStream, OutputStream outputStream,
-                             ExecutionContext executionContext) throws IOException {
+      ExecutionContext executionContext) throws IOException {
     try {
       processOneMessage(inputStream, outputStream, executionContext);
     } catch (InvalidProtocolMessageException e) {

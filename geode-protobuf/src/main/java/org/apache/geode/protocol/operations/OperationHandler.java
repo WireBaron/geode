@@ -31,6 +31,7 @@ public interface OperationHandler<Req, Resp> {
    * Decode the message, deserialize contained values using the serialization service, do the work
    * indicated on the provided cache, and return a response.
    */
-  Result<Resp> process(SerializationService serializationService, Req request, ExecutionContext executionContext);
+  Result<Resp> process(SerializationService serializationService, Req request,
+      ExecutionContext executionContext);
 }
 

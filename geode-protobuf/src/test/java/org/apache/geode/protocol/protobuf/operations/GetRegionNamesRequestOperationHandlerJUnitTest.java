@@ -88,9 +88,9 @@ public class GetRegionNamesRequestOperationHandlerJUnitTest extends OperationHan
     Cache emptyCache = mock(Cache.class);;
     when(emptyCache.rootRegions())
         .thenReturn(Collections.unmodifiableSet(new HashSet<Region<String, String>>()));
-    Result<RegionAPI.GetRegionNamesResponse> result =
-        operationHandler.process(serializationServiceStub,
-            ProtobufRequestUtilities.createGetRegionNamesRequest(), new ExecutionContext(emptyCache, authenticatorStub));
+    Result<RegionAPI.GetRegionNamesResponse> result = operationHandler.process(
+        serializationServiceStub, ProtobufRequestUtilities.createGetRegionNamesRequest(),
+        new ExecutionContext(emptyCache, authenticatorStub));
     Assert.assertTrue(result instanceof Success);
 
     RegionAPI.GetRegionNamesResponse getRegionsResponse = result.getMessage();

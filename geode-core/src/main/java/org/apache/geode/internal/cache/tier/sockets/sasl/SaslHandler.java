@@ -6,8 +6,8 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import java.io.IOException;
 
 public class SaslHandler implements CallbackHandler {
-    @Override
-    public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+  @Override
+  public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
 
-    }
+  }
 }

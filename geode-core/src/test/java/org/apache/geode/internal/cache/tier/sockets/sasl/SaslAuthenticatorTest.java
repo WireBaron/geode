@@ -54,8 +54,10 @@ public class SaslAuthenticatorTest {
 
   @Test
   public void respondsToHandshakeWithSelectedMechanism() {
-    Collection<String> requestedMechanisms = Arrays.asList(new String[] {"MD5", "WD40", "PLAIN", "foo"});
-    Optional<String> handshakeResult = saslAuthenticator.handleHandshakeRequest(requestedMechanisms);
+    Collection<String> requestedMechanisms =
+        Arrays.asList(new String[] {"MD5", "WD40", "PLAIN", "foo"});
+    Optional<String> handshakeResult =
+        saslAuthenticator.handleHandshakeRequest(requestedMechanisms);
     assertTrue(handshakeResult.isPresent());
     assertEquals("PLAIN", handshakeResult.get());
   }
@@ -63,7 +65,8 @@ public class SaslAuthenticatorTest {
   @Test
   public void emptyResultToHandshakeWithNoValidMechanism() {
     Collection<String> requestedMechanisms = Arrays.asList(new String[] {"MD5", "WD40", "foo"});
-    Optional<String> handshakeResult = saslAuthenticator.handleHandshakeRequest(requestedMechanisms);
+    Optional<String> handshakeResult =
+        saslAuthenticator.handleHandshakeRequest(requestedMechanisms);
     assertFalse(handshakeResult.isPresent());
   }
 }

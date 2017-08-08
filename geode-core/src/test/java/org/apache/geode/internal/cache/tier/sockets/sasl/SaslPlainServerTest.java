@@ -46,8 +46,7 @@ public class SaslPlainServerTest {
 
   @Test
   public void testEvaluateResponseDelegatesToSecurityManager() throws SaslException {
-    ArgumentCaptor<Properties>
-        securityManagerAuthenticateCaptor =
+    ArgumentCaptor<Properties> securityManagerAuthenticateCaptor =
         ArgumentCaptor.forClass(Properties.class);
     byte[] response = makeResponse(authenticationID, username, password);
     Object principal = mock(Object.class);
@@ -72,8 +71,7 @@ public class SaslPlainServerTest {
     byte[] response = makeResponse(authenticationID, username, password);
     String errorMessage = "authentication failed";
     when(securityManagerMock.authenticate(any(Properties.class)))
-        .thenThrow(new AuthenticationFailedException(
-            errorMessage));
+        .thenThrow(new AuthenticationFailedException(errorMessage));
 
     Throwable throwable = catchThrowable(() -> saslPlainServer.evaluateResponse(response));
 

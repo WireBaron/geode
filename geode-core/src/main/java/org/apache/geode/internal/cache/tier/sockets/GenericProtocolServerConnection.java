@@ -37,15 +37,13 @@ public class GenericProtocolServerConnection extends ServerConnection {
    * Creates a new <code>GenericProtocolServerConnection</code> that processes messages received
    * from an edge client over a given <code>Socket</code>.
    */
-  public GenericProtocolServerConnection(Socket socket, InternalCache internalCache, CachedRegionHelper helper,
-                                         CacheServerStats stats, int hsTimeout,
-                                         int socketBufferSize, String communicationModeStr,
-                                         byte communicationMode, Acceptor acceptor,
-                                         ClientProtocolMessageHandler newClientProtocol,
-                                         SecurityService securityService,
-                                         Authenticator authenticator) {
-    super(socket, internalCache, helper, stats, hsTimeout, socketBufferSize, communicationModeStr, communicationMode,
-        acceptor, securityService);
+  public GenericProtocolServerConnection(Socket socket, InternalCache internalCache,
+      CachedRegionHelper helper, CacheServerStats stats, int hsTimeout, int socketBufferSize,
+      String communicationModeStr, byte communicationMode, Acceptor acceptor,
+      ClientProtocolMessageHandler newClientProtocol, SecurityService securityService,
+      Authenticator authenticator) {
+    super(socket, internalCache, helper, stats, hsTimeout, socketBufferSize, communicationModeStr,
+        communicationMode, acceptor, securityService);
     this.executionContext = new ExecutionContext(internalCache, authenticator);
     this.messageHandler = newClientProtocol;
   }
@@ -56,16 +54,19 @@ public class GenericProtocolServerConnection extends ServerConnection {
       Socket socket = this.getSocket();
       InputStream inputStream = socket.getInputStream();
       OutputStream outputStream = socket.getOutputStream();
-//      if(!isAuthenticated) {
-//        AuthenticationService.AuthenticationProgress authenticationProgress = this.authenticationContext.process(inputStream, outputStream);
-//        if (authenticationProgress == AuthenticationService.AuthenticationProgress.AUTHENTICATION_SUCCEEDED) {
-//          isAuthenticated = true;
-//        } else if (authenticationProgress == AuthenticationService.AuthenticationProgress.AUTHENTICATION_FAILED) {
-//          this.setFlagProcessMessagesAsFalse(); // TODO: better shutdown.
-//        } // else leave everything as is (AUTHENTICATION_IN_PROGRESS case)
-//        return;
-//      }
-//      authenticateClient(dataInputStream, dataOutputStream);
+      // if(!isAuthenticated) {
+      // AuthenticationService.AuthenticationProgress authenticationProgress =
+      // this.authenticationContext.process(inputStream, outputStream);
+      // if (authenticationProgress ==
+      // AuthenticationService.AuthenticationProgress.AUTHENTICATION_SUCCEEDED) {
+      // isAuthenticated = true;
+      // } else if (authenticationProgress ==
+      // AuthenticationService.AuthenticationProgress.AUTHENTICATION_FAILED) {
+      // this.setFlagProcessMessagesAsFalse(); // TODO: better shutdown.
+      // } // else leave everything as is (AUTHENTICATION_IN_PROGRESS case)
+      // return;
+      // }
+      // authenticateClient(dataInputStream, dataOutputStream);
 
       messageHandler.receiveMessage(inputStream, outputStream, executionContext);
     } catch (IOException e) {
@@ -76,7 +77,7 @@ public class GenericProtocolServerConnection extends ServerConnection {
 
   @Override
   protected boolean doHandShake(byte epType, int qSize) {
-//    return (new SaslAuthenticator(theSocket, securityService)).authenticateClient();
+    // return (new SaslAuthenticator(theSocket, securityService)).authenticateClient();
     return true;
   }
 

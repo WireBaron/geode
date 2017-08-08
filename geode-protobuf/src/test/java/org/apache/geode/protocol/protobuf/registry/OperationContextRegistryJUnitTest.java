@@ -17,13 +17,11 @@ public class OperationContextRegistryJUnitTest {
   @Test
   public void verifyOperationContextForRequestAPICasesAreComplete() {
     OperationContextRegistry operationContextRegistry = new OperationContextRegistry();
-    List<ClientProtocol.Request.RequestAPICase>
-        missingApiCases =
-        Arrays.stream(ClientProtocol.Request.RequestAPICase.values()
-        ).filter(apiCase ->
-            operationContextRegistry.getOperationContext(apiCase) == null
-        ).filter(apiCase -> apiCase != ClientProtocol.Request.RequestAPICase.REQUESTAPI_NOT_SET
-        ).collect(Collectors.toList());
-    assertEquals("missing API case(s) in registry: "+ missingApiCases, 0, missingApiCases.size());
+    List<ClientProtocol.Request.RequestAPICase> missingApiCases =
+        Arrays.stream(ClientProtocol.Request.RequestAPICase.values())
+            .filter(apiCase -> operationContextRegistry.getOperationContext(apiCase) == null)
+            .filter(apiCase -> apiCase != ClientProtocol.Request.RequestAPICase.REQUESTAPI_NOT_SET)
+            .collect(Collectors.toList());
+    assertEquals("missing API case(s) in registry: " + missingApiCases, 0, missingApiCases.size());
   }
 }

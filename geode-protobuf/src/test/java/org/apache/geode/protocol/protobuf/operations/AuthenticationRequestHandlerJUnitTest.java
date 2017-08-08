@@ -18,9 +18,12 @@ package org.apache.geode.protocol.protobuf.operations;
 import org.apache.geode.internal.cache.tier.sockets.sasl.Authenticator;
 import org.apache.geode.protocol.protobuf.AuthenticationAPI;
 import org.apache.geode.protocol.protobuf.BasicTypes;
+import org.apache.geode.protocol.protobuf.Failure;
+import org.apache.geode.protocol.protobuf.ProtocolErrorCode;
 import org.apache.geode.protocol.protobuf.Result;
 import org.apache.geode.protocol.protobuf.Success;
 import org.apache.geode.protocol.protobuf.utilities.ProtobufUtilities;
+import org.apache.geode.serialization.exception.UnsupportedEncodingTypeException;
 import org.apache.geode.test.junit.categories.UnitTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,6 +36,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,37 +56,103 @@ public class AuthenticationRequestHandlerJUnitTest extends OperationHandlerJUnit
 
   @Test
   public void authenticationRequestSucceeds() throws Exception {
-    when(authenticatorStub.handleAuthenticationRequest(any())).thenReturn(Authenticator.AuthenticationProgress.AUTHENTICATION_SUCCEEDED);
-    AuthenticationAPI.AuthenticationRequest
-        authenticationRequest =
-        AuthenticationAPI.AuthenticationRequest.newBuilder().addAuthenticationParam(ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_USER)).addAuthenticationParam(ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_PASSWORD)).build();
+    when(authenticatorStub.handleAuthenticationRequest(any()))
+        .thenReturn(Authenticator.AuthenticationProgress.AUTHENTICATION_SUCCEEDED);
 
-    Result<AuthenticationAPI.AuthenticationResponse> authenticationResult = operationHandler.process(serializationServiceStub, authenticationRequest, executionContext);
+    AuthenticationAPI.AuthenticationRequest authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder()
+            .addAuthenticationParam(
+                ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_USER))
+            .addAuthenticationParam(
+                ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_PASSWORD))
+            .build();
+
+    Result<AuthenticationAPI.AuthenticationResponse> authenticationResult =
+        operationHandler.process(serializationServiceStub, authenticationRequest, executionContext);
+
     assertTrue(authenticationResult instanceof Success);
-    AuthenticationAPI.AuthenticationResponse authenticationResponse = authenticationResult.getMessage();
-    assertEquals(AuthenticationAPI.AuthenticationResult.AUTH_SUCCESS, authenticationResponse.getAuthenticationResult());
+    AuthenticationAPI.AuthenticationResponse authenticationResponse =
+        authenticationResult.getMessage();
+    assertEquals(AuthenticationAPI.AuthenticationResult.AUTH_SUCCESS,
+        authenticationResponse.getAuthenticationResult());
 
     ArgumentCaptor<Collection> argumentCaptor = ArgumentCaptor.forClass(Collection.class);
     verify(authenticatorStub, times(1)).handleAuthenticationRequest(argumentCaptor.capture());
     assertEquals(1, argumentCaptor.getAllValues().size());
-    assertArrayEquals(new String[]{TEST_USER, TEST_PASSWORD}, argumentCaptor.getAllValues().get(0).toArray());
+    assertArrayEquals(new String[] {TEST_USER, TEST_PASSWORD},
+        argumentCaptor.getAllValues().get(0).toArray());
   }
 
   @Test
   public void encodingErrorFails() throws Exception {
-    when(authenticatorStub.handleAuthenticationRequest(any())).thenReturn(Authenticator.AuthenticationProgress.AUTHENTICATION_SUCCEEDED);
-    BasicTypes.EncodedValue invalidPassword = BasicTypes.EncodedValue.newBuilder().setCustomEncodedValue(BasicTypes.CustomEncodedValue.newBuilder().setEncodingType(BasicTypes.EncodingType.INVALID)).build();
+    when(authenticatorStub.handleAuthenticationRequest(any()))
+        .thenReturn(Authenticator.AuthenticationProgress.AUTHENTICATION_SUCCEEDED);
 
-    when(serializationServiceStub.decode(BasicTypes.EncodingType.INVALID, any())).thenReturn(null);
+    BasicTypes.EncodedValue invalidPassword =
+        BasicTypes.EncodedValue.newBuilder().setCustomEncodedValue(BasicTypes.CustomEncodedValue
+            .newBuilder().setEncodingType(BasicTypes.EncodingType.INVALID)).build();
 
-    try {
-      AuthenticationAPI.AuthenticationRequest
-          authenticationRequest =
-          AuthenticationAPI.AuthenticationRequest.newBuilder().addAuthenticationParam(ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_USER)).addAuthenticationParam(invalidPassword).build();
-    } cat
+    when(serializationServiceStub.decode(eq(BasicTypes.EncodingType.INVALID), any()))
+        .thenThrow(new UnsupportedEncodingTypeException("FAIL."));
 
-    Result<AuthenticationAPI.AuthenticationResponse> authenticationResult = operationHandler.process(serializationServiceStub, authenticationRequest, executionContext);
+    AuthenticationAPI.AuthenticationRequest authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder()
+            .addAuthenticationParam(
+                ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_USER))
+            .addAuthenticationParam(invalidPassword).build();
 
 
+    Result<AuthenticationAPI.AuthenticationResponse> authenticationResult =
+        operationHandler.process(serializationServiceStub, authenticationRequest, executionContext);
+
+    assertTrue(authenticationResult instanceof Failure);
+    assertEquals(ProtocolErrorCode.VALUE_ENCODING_ERROR.codeValue,
+        authenticationResult.getErrorMessage().getErrorCode());
+  }
+
+  @Test
+  public void authenticationRequestFails() throws Exception {
+    when(authenticatorStub.handleAuthenticationRequest(any()))
+        .thenReturn(Authenticator.AuthenticationProgress.AUTHENTICATION_FAILED);
+
+    AuthenticationAPI.AuthenticationRequest authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder()
+            .addAuthenticationParam(
+                ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_USER))
+            .addAuthenticationParam(
+                ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_PASSWORD))
+            .build();
+
+    Result<AuthenticationAPI.AuthenticationResponse> authenticationResult =
+        operationHandler.process(serializationServiceStub, authenticationRequest, executionContext);
+
+    assertTrue(authenticationResult instanceof Success);
+    AuthenticationAPI.AuthenticationResponse authenticationResponse =
+        authenticationResult.getMessage();
+    assertEquals(AuthenticationAPI.AuthenticationResult.AUTH_INVALID,
+        authenticationResponse.getAuthenticationResult());
+  }
+
+  @Test
+  public void authenticationRequestReturnsInProgress() throws Exception {
+    when(authenticatorStub.handleAuthenticationRequest(any()))
+        .thenReturn(Authenticator.AuthenticationProgress.AUTHENTICATION_IN_PROGRESS);
+
+    AuthenticationAPI.AuthenticationRequest authenticationRequest =
+        AuthenticationAPI.AuthenticationRequest.newBuilder()
+            .addAuthenticationParam(
+                ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_USER))
+            .addAuthenticationParam(
+                ProtobufUtilities.createEncodedValue(serializationServiceStub, TEST_PASSWORD))
+            .build();
+
+    Result<AuthenticationAPI.AuthenticationResponse> authenticationResult =
+        operationHandler.process(serializationServiceStub, authenticationRequest, executionContext);
+    
+    assertTrue(authenticationResult instanceof Success);
+    AuthenticationAPI.AuthenticationResponse authenticationResponse =
+        authenticationResult.getMessage();
+    assertEquals(AuthenticationAPI.AuthenticationResult.AUTH_INPROGRESS,
+        authenticationResponse.getAuthenticationResult());
   }
 }

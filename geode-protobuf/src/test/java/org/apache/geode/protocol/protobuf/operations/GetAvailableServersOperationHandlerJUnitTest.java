@@ -20,6 +20,7 @@ import org.apache.geode.distributed.internal.InternalDistributedSystem;
 import org.apache.geode.distributed.internal.ServerLocation;
 import org.apache.geode.distributed.internal.tcpserver.TcpClient;
 import org.apache.geode.internal.cache.GemFireCacheImpl;
+import org.apache.geode.internal.cache.tier.sockets.sasl.ExecutionContext;
 import org.apache.geode.protocol.protobuf.BasicTypes;
 import org.apache.geode.protocol.protobuf.Failure;
 import org.apache.geode.protocol.protobuf.Result;
@@ -55,6 +56,7 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
 
     operationHandler = mock(GetAvailableServersOperationHandler.class);
     cacheStub = mock(GemFireCacheImpl.class);
+    executionContext = new ExecutionContext(cacheStub, authenticatorStub);
     when(operationHandler.process(any(), any(), any())).thenCallRealMethod();
     InternalDistributedSystem mockDistributedSystem = mock(InternalDistributedSystem.class);
     when(cacheStub.getDistributedSystem()).thenReturn(mockDistributedSystem);
@@ -79,8 +81,8 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
 
     ServerAPI.GetAvailableServersRequest getAvailableServersRequest =
         ProtobufRequestUtilities.createGetAvailableServersRequest();
-    Result operationHandlerResult =
-        operationHandler.process(serializationServiceStub, getAvailableServersRequest, executionContext);
+    Result operationHandlerResult = operationHandler.process(serializationServiceStub,
+        getAvailableServersRequest, executionContext);
     assertTrue(operationHandlerResult instanceof Success);
     ValidateGetAvailableServersResponse(
         (GetAvailableServersResponse) operationHandlerResult.getMessage());
@@ -99,8 +101,8 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
 
     ServerAPI.GetAvailableServersRequest getAvailableServersRequest =
         ProtobufRequestUtilities.createGetAvailableServersRequest();
-    Result operationHandlerResult =
-        operationHandler.process(serializationServiceStub, getAvailableServersRequest, executionContext);
+    Result operationHandlerResult = operationHandler.process(serializationServiceStub,
+        getAvailableServersRequest, executionContext);
     assertTrue(operationHandlerResult instanceof Success);
     ValidateGetAvailableServersResponse(
         (GetAvailableServersResponse) operationHandlerResult.getMessage());
@@ -124,8 +126,8 @@ public class GetAvailableServersOperationHandlerJUnitTest extends OperationHandl
 
     ServerAPI.GetAvailableServersRequest getAvailableServersRequest =
         ProtobufRequestUtilities.createGetAvailableServersRequest();
-    Result operationHandlerResult =
-        operationHandler.process(serializationServiceStub, getAvailableServersRequest, executionContext);
+    Result operationHandlerResult = operationHandler.process(serializationServiceStub,
+        getAvailableServersRequest, executionContext);
     assertTrue(operationHandlerResult instanceof Failure);
   }
 }

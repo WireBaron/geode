@@ -12,7 +12,7 @@ public class HandshakeResponse {
   private String correlationID;
   private String mechanism;
 
-  public HandshakeResponse(String correlationID, String mechanism){
+  public HandshakeResponse(String correlationID, String mechanism) {
     this.correlationID = correlationID;
     this.mechanism = mechanism;
   }
@@ -32,17 +32,17 @@ public class HandshakeResponse {
 
   public static HandshakeResponse from(byte[] message) throws AuthenticationException {
     String[] strings = new String(message, Charset.forName("UTF8")).split("\00");
-    if(strings.length < 2)
+    if (strings.length < 2)
       throw new AuthenticationException("Malformed handshake");
 
     return new HandshakeResponse(strings[0], strings[1]);
   }
 
-  public String getMechanism(){
+  public String getMechanism() {
     return mechanism;
   }
 
-  public String getCorrelationId(){
+  public String getCorrelationId() {
     return correlationID;
   }
 }

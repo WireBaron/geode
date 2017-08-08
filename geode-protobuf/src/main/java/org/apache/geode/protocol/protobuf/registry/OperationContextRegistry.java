@@ -83,14 +83,14 @@ public class OperationContextRegistry {
         new GetAvailableServersOperationHandler(),
         opsResp -> ClientProtocol.Response.newBuilder().setGetAvailableServersResponse(opsResp)));
 
-    operationContexts.put(RequestAPICase.AUTHENTICATION_HANDSHAKE_REQUEST, new OperationContext<>(
-        ClientProtocol.Request::getAuthenticationHandshakeRequest,
-        new AuthenticationHandshakeRequestHandler(),
-        opsResp -> ClientProtocol.Response.newBuilder().setAuthenticationHandshakeResponse(opsResp)));
+    operationContexts.put(RequestAPICase.AUTHENTICATION_HANDSHAKE_REQUEST,
+        new OperationContext<>(ClientProtocol.Request::getAuthenticationHandshakeRequest,
+            new AuthenticationHandshakeRequestHandler(), opsResp -> ClientProtocol.Response
+                .newBuilder().setAuthenticationHandshakeResponse(opsResp)));
 
-//    operationContexts.put(RequestAPICase.AUTHENTICATION_REQUEST, new OperationContext<>(
-//        ClientProtocol.Request::getAuthenticationRequest,
-//        new GetAvailableServersOperationHandler(),
-//        opsResp -> ClientProtocol.Response.newBuilder().setGetAvailableServersResponse(opsResp)));
+    // operationContexts.put(RequestAPICase.AUTHENTICATION_REQUEST, new OperationContext<>(
+    // ClientProtocol.Request::getAuthenticationRequest,
+    // new GetAvailableServersOperationHandler(),
+    // opsResp -> ClientProtocol.Response.newBuilder().setGetAvailableServersResponse(opsResp)));
   }
 }

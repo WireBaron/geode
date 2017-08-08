@@ -31,9 +31,12 @@ import org.apache.geode.serialization.registry.exception.CodecNotRegisteredForTy
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuthenticationRequestHandler implements OperationHandler<AuthenticationAPI.AuthenticationRequest, AuthenticationAPI.AuthenticationResponse> {
+public class AuthenticationRequestHandler implements
+    OperationHandler<AuthenticationAPI.AuthenticationRequest, AuthenticationAPI.AuthenticationResponse> {
   @Override
-  public Result<AuthenticationAPI.AuthenticationResponse> process(SerializationService serializationService, AuthenticationAPI.AuthenticationRequest request, ExecutionContext executionContext) {
+  public Result<AuthenticationAPI.AuthenticationResponse> process(
+      SerializationService serializationService, AuthenticationAPI.AuthenticationRequest request,
+      ExecutionContext executionContext) {
     try {
       List<BasicTypes.EncodedValue> authenticationParamList = request.getAuthenticationParamList();
       Authenticator authenticator = executionContext.getAuthenticator();
@@ -42,9 +45,11 @@ public class AuthenticationRequestHandler implements OperationHandler<Authentica
       for (BasicTypes.EncodedValue param : authenticationParamList) {
         decodedParams.add(ProtobufUtilities.decodeValue(serializationService, param));
       }
-      Authenticator.AuthenticationProgress authenticationProgress = authenticator.handleAuthenticationRequest(decodedParams);
+      Authenticator.AuthenticationProgress authenticationProgress =
+          authenticator.handleAuthenticationRequest(decodedParams);
 
-      AuthenticationAPI.AuthenticationResult authenticationResult = AuthenticationAPI.AuthenticationResult.AUTH_INVALID;
+      AuthenticationAPI.AuthenticationResult authenticationResult =
+          AuthenticationAPI.AuthenticationResult.AUTH_INVALID;
       switch (authenticationProgress) {
         case AUTHENTICATION_FAILED:
           authenticationResult = AuthenticationAPI.AuthenticationResult.AUTH_INVALID;
@@ -57,9 +62,11 @@ public class AuthenticationRequestHandler implements OperationHandler<Authentica
           break;
       }
 
-      return Success.of(AuthenticationAPI.AuthenticationResponse.newBuilder().setAuthenticationResult(authenticationResult).build());
-    } catch (CodecNotRegisteredForTypeException |UnsupportedEncodingTypeException e) {
-      return Failure.of(BasicTypes.ErrorResponse.newBuilder().setMessage("Encoding error").setErrorCode(ProtocolErrorCode.VALUE_ENCODING_ERROR.codeValue).build());
+      return Success.of(AuthenticationAPI.AuthenticationResponse.newBuilder()
+          .setAuthenticationResult(authenticationResult).build());
+    } catch (CodecNotRegisteredForTypeException | UnsupportedEncodingTypeException e) {
+      return Failure.of(BasicTypes.ErrorResponse.newBuilder().setMessage("Encoding error")
+          .setErrorCode(ProtocolErrorCode.VALUE_ENCODING_ERROR.codeValue).build());
     }
   }
 }

@@ -19,12 +19,15 @@ public class AuthenticationHandshakeRequestHandler implements
   public Result<AuthenticationAPI.AuthenticationHandshakeResponse> process(
       SerializationService serializationService,
       AuthenticationAPI.AuthenticationHandshakeRequest request, ExecutionContext executionContext) {
-    Optional<String> mechanism = executionContext.getAuthenticator().handleHandshakeRequest(request.getMechanismList());
+    Optional<String> mechanism =
+        executionContext.getAuthenticator().handleHandshakeRequest(request.getMechanismList());
     if (mechanism.isPresent()) {
-      return Success.of(AuthenticationAPI.AuthenticationHandshakeResponse.newBuilder().setMechanism(mechanism.get())
-          .build());
+      return Success.of(AuthenticationAPI.AuthenticationHandshakeResponse.newBuilder()
+          .setMechanism(mechanism.get()).build());
     } else {
-      return Failure.of(BasicTypes.ErrorResponse.newBuilder().setErrorCode(ProtocolErrorCode.AUTHENTICATION_FAILED.codeValue).setMessage("No mutually agreed upon mechanism").build());
+      return Failure.of(BasicTypes.ErrorResponse.newBuilder()
+          .setErrorCode(ProtocolErrorCode.AUTHENTICATION_FAILED.codeValue)
+          .setMessage("No mutually agreed upon mechanism").build());
     }
   }
 }

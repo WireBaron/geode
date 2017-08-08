@@ -31,9 +31,8 @@ import javax.security.sasl.AuthorizeCallback;
 public class SaslCallbackHandler implements CallbackHandler {
 
   @Override
-  public void handle(Callback[] callbacks)
-      throws IOException, UnsupportedCallbackException {
-    for (Callback callback: callbacks) {
+  public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+    for (Callback callback : callbacks) {
       System.out.println("ClientCallbackHandler processing callback " + callback);
 
       if (callback instanceof TextOutputCallback) {
@@ -50,13 +49,12 @@ public class SaslCallbackHandler implements CallbackHandler {
             System.out.println("WARNING: " + toc.getMessage());
             break;
           default:
-            throw new IOException("Unsupported message type: " +
-                toc.getMessageType());
+            throw new IOException("Unsupported message type: " + toc.getMessageType());
         }
 
       } else if (callback instanceof NameCallback) {
         NameCallback nc = (NameCallback) callback;
-        System.out.println("name from name callback: " +nc.getDefaultName());
+        System.out.println("name from name callback: " + nc.getDefaultName());
       } else if (callback instanceof PasswordCallback) {
         PasswordCallback pc = (PasswordCallback) callback;
         System.out.println("client is setting password");
@@ -66,8 +64,7 @@ public class SaslCallbackHandler implements CallbackHandler {
         AuthorizeCallback ac = (AuthorizeCallback) callback;
         ac.setAuthorized(true);
       } else {
-        throw new UnsupportedCallbackException
-            (callback, "Unrecognized Callback");
+        throw new UnsupportedCallbackException(callback, "Unrecognized Callback");
       }
     }
   }

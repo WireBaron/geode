@@ -37,121 +37,126 @@ import java.net.Socket;
 
 @Category(UnitTest.class)
 public class GenericProtocolServerConnectionTest {
-//  @Test
-//  public void testProcessFlag() throws IOException {
-//    try {
-//      System.setProperty("geode.feature-protobuf-protocol", "true");
-//      ServerConnection serverConnection = createIOExceptionThrowingServerConnection();
-//      assertTrue(serverConnection.processMessages);
-//      serverConnection.doOneMessage();
-//      assertFalse(serverConnection.processMessages);
-//    } finally {
-//      System.clearProperty("geode.feature-protobuf-protocol");
-//    }
-//  }
+  // @Test
+  // public void testProcessFlag() throws IOException {
+  // try {
+  // System.setProperty("geode.feature-protobuf-protocol", "true");
+  // ServerConnection serverConnection = createIOExceptionThrowingServerConnection();
+  // assertTrue(serverConnection.processMessages);
+  // serverConnection.doOneMessage();
+  // assertFalse(serverConnection.processMessages);
+  // } finally {
+  // System.clearProperty("geode.feature-protobuf-protocol");
+  // }
+  // }
 
-//  @Test
-//  public void testAuthenticationSuccess() throws IOException {
-//    GenericServerConnectionBuilder builder = new GenericServerConnectionBuilder();
-//    when(builder.mockAuthenticationService.process(any(), any())).thenReturn(
-//        AuthenticationService.AuthenticationProgress.AUTHENTICATION_SUCCEEDED
-//    );
-//
-//    GenericProtocolServerConnection testConnection = builder.buildConnection();
-//
-//    testConnection.doOneMessage();
-//    assertTrue(testConnection.processMessages);
-//    verify(builder.mockAuthenticationService, times(1)).process(builder.stubInputStream, builder.stubOutputStream);
-//    verify(builder.stubClientProtocolMessageHandler, times(0)).receiveMessage(any(), any(), any());
-//
-//    testConnection.doOneMessage();
-//    assertTrue(testConnection.processMessages);
-//    verify(builder.mockAuthenticationService, times(1)).process(builder.stubInputStream, builder.stubOutputStream);
-//    verify(builder.stubClientProtocolMessageHandler, times(1)).receiveMessage(eq(builder.stubInputStream), eq(builder.stubOutputStream), any());
-//  }
-//
-//  @Test
-//  public void testAuthenticationNotCompleteYet() throws IOException {
-//    GenericServerConnectionBuilder builder = new GenericServerConnectionBuilder();
-//    when(builder.mockAuthenticationService.process(any(), any())).thenReturn(
-//        AuthenticationService.AuthenticationProgress.AUTHENTICATION_IN_PROGRESS
-//    );
-//
-//    GenericProtocolServerConnection testConnection = builder.buildConnection();
-//
-//    testConnection.doOneMessage();
-//    assertTrue(testConnection.processMessages);
-//
-//    testConnection.doOneMessage();
-//    assertTrue(testConnection.processMessages);
-//
-//    verify(builder.mockAuthenticationService, times(2)).process(builder.stubInputStream, builder.stubOutputStream);
-//    verify(builder.stubClientProtocolMessageHandler, times(0)).receiveMessage(any(), any(), any());
-//  }
-//
-//  @Test
-//  public void testAuthenticationFailure() throws IOException {
-//    GenericServerConnectionBuilder builder = new GenericServerConnectionBuilder();
-//    when(builder.mockAuthenticationService.process(any(), any())).thenReturn(
-//        AuthenticationService.AuthenticationProgress.AUTHENTICATION_FAILED
-//    );
-//
-//    GenericProtocolServerConnection testConnection = builder.buildConnection();
-//
-//    testConnection.doOneMessage();
-//    assertFalse(testConnection.processMessages);
-//
-//    verify(builder.mockAuthenticationService, times(1)).process(builder.stubInputStream, builder.stubOutputStream);
-//    verify(builder.stubClientProtocolMessageHandler, times(0)).receiveMessage(any(), any(), any());
-//  }
+  // @Test
+  // public void testAuthenticationSuccess() throws IOException {
+  // GenericServerConnectionBuilder builder = new GenericServerConnectionBuilder();
+  // when(builder.mockAuthenticationService.process(any(), any())).thenReturn(
+  // AuthenticationService.AuthenticationProgress.AUTHENTICATION_SUCCEEDED
+  // );
+  //
+  // GenericProtocolServerConnection testConnection = builder.buildConnection();
+  //
+  // testConnection.doOneMessage();
+  // assertTrue(testConnection.processMessages);
+  // verify(builder.mockAuthenticationService, times(1)).process(builder.stubInputStream,
+  // builder.stubOutputStream);
+  // verify(builder.stubClientProtocolMessageHandler, times(0)).receiveMessage(any(), any(), any());
+  //
+  // testConnection.doOneMessage();
+  // assertTrue(testConnection.processMessages);
+  // verify(builder.mockAuthenticationService, times(1)).process(builder.stubInputStream,
+  // builder.stubOutputStream);
+  // verify(builder.stubClientProtocolMessageHandler,
+  // times(1)).receiveMessage(eq(builder.stubInputStream), eq(builder.stubOutputStream), any());
+  // }
+  //
+  // @Test
+  // public void testAuthenticationNotCompleteYet() throws IOException {
+  // GenericServerConnectionBuilder builder = new GenericServerConnectionBuilder();
+  // when(builder.mockAuthenticationService.process(any(), any())).thenReturn(
+  // AuthenticationService.AuthenticationProgress.AUTHENTICATION_IN_PROGRESS
+  // );
+  //
+  // GenericProtocolServerConnection testConnection = builder.buildConnection();
+  //
+  // testConnection.doOneMessage();
+  // assertTrue(testConnection.processMessages);
+  //
+  // testConnection.doOneMessage();
+  // assertTrue(testConnection.processMessages);
+  //
+  // verify(builder.mockAuthenticationService, times(2)).process(builder.stubInputStream,
+  // builder.stubOutputStream);
+  // verify(builder.stubClientProtocolMessageHandler, times(0)).receiveMessage(any(), any(), any());
+  // }
+  //
+  // @Test
+  // public void testAuthenticationFailure() throws IOException {
+  // GenericServerConnectionBuilder builder = new GenericServerConnectionBuilder();
+  // when(builder.mockAuthenticationService.process(any(), any())).thenReturn(
+  // AuthenticationService.AuthenticationProgress.AUTHENTICATION_FAILED
+  // );
+  //
+  // GenericProtocolServerConnection testConnection = builder.buildConnection();
+  //
+  // testConnection.doOneMessage();
+  // assertFalse(testConnection.processMessages);
+  //
+  // verify(builder.mockAuthenticationService, times(1)).process(builder.stubInputStream,
+  // builder.stubOutputStream);
+  // verify(builder.stubClientProtocolMessageHandler, times(0)).receiveMessage(any(), any(), any());
+  // }
 
-//  public class GenericServerConnectionBuilder {
-//    public Socket socketStub;
-//    public OutputStream stubOutputStream;
-//    public InputStream stubInputStream;
-//    public InternalCache internalCacheStub;
-//    public CachedRegionHelper cachedRegionHelperStub;
-//    public CacheServerStats stubCacheServerStats;
-//    public AcceptorImpl stubAcceptor;
-//    public ClientProtocolMessageHandler stubClientProtocolMessageHandler;
-//    public SecurityService stubSecurityService;
-//    public Authenticator mockAuthenticationService;
-//
-//    public GenericServerConnectionBuilder() throws IOException {
-//      stubOutputStream = mock(OutputStream.class);
-//      stubInputStream = mock(InputStream.class);
-//
-//      socketStub = mock(Socket.class);
-//      when(socketStub.getInetAddress()).thenReturn(InetAddress.getByName("localhost"));
-//      when(socketStub.getInputStream()).thenReturn(stubInputStream);
-//      when(socketStub.getOutputStream()).thenReturn(stubOutputStream);
-//
-//      internalCacheStub = mock(InternalCache.class);
-//      cachedRegionHelperStub = mock(CachedRegionHelper.class);
-//      stubCacheServerStats = mock(CacheServerStats.class);
-//      stubAcceptor = mock(AcceptorImpl.class);
-//      stubClientProtocolMessageHandler = mock(ClientProtocolMessageHandler.class);
-//      stubSecurityService = mock(SecurityService.class);
-//      mockAuthenticationService = mock(AuthenticationService.class);
-//    }
-//
-//    public GenericProtocolServerConnection buildConnection() {
-//      return new GenericProtocolServerConnection(
-//          socketStub,
-//          internalCacheStub,
-//          cachedRegionHelperStub,
-//          stubCacheServerStats,
-//          1,
-//          1,
-//          "PLAIN",
-//          (byte) 1,
-//          stubAcceptor,
-//          stubClientProtocolMessageHandler,
-//          stubSecurityService,
-//          mockAuthenticationService
-//      );
-//    }
-//  }
+  // public class GenericServerConnectionBuilder {
+  // public Socket socketStub;
+  // public OutputStream stubOutputStream;
+  // public InputStream stubInputStream;
+  // public InternalCache internalCacheStub;
+  // public CachedRegionHelper cachedRegionHelperStub;
+  // public CacheServerStats stubCacheServerStats;
+  // public AcceptorImpl stubAcceptor;
+  // public ClientProtocolMessageHandler stubClientProtocolMessageHandler;
+  // public SecurityService stubSecurityService;
+  // public Authenticator mockAuthenticationService;
+  //
+  // public GenericServerConnectionBuilder() throws IOException {
+  // stubOutputStream = mock(OutputStream.class);
+  // stubInputStream = mock(InputStream.class);
+  //
+  // socketStub = mock(Socket.class);
+  // when(socketStub.getInetAddress()).thenReturn(InetAddress.getByName("localhost"));
+  // when(socketStub.getInputStream()).thenReturn(stubInputStream);
+  // when(socketStub.getOutputStream()).thenReturn(stubOutputStream);
+  //
+  // internalCacheStub = mock(InternalCache.class);
+  // cachedRegionHelperStub = mock(CachedRegionHelper.class);
+  // stubCacheServerStats = mock(CacheServerStats.class);
+  // stubAcceptor = mock(AcceptorImpl.class);
+  // stubClientProtocolMessageHandler = mock(ClientProtocolMessageHandler.class);
+  // stubSecurityService = mock(SecurityService.class);
+  // mockAuthenticationService = mock(AuthenticationService.class);
+  // }
+  //
+  // public GenericProtocolServerConnection buildConnection() {
+  // return new GenericProtocolServerConnection(
+  // socketStub,
+  // internalCacheStub,
+  // cachedRegionHelperStub,
+  // stubCacheServerStats,
+  // 1,
+  // 1,
+  // "PLAIN",
+  // (byte) 1,
+  // stubAcceptor,
+  // stubClientProtocolMessageHandler,
+  // stubSecurityService,
+  // mockAuthenticationService
+  // );
+  // }
+  // }
 
   private static ServerConnection createIOExceptionThrowingServerConnection() throws IOException {
     Socket socketMock = mock(Socket.class);

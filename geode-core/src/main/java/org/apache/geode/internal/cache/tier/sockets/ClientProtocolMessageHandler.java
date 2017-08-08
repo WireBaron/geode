@@ -31,6 +31,5 @@ import org.apache.geode.internal.cache.tier.sockets.sasl.ExecutionContext;
  */
 public interface ClientProtocolMessageHandler {
   void receiveMessage(InputStream inputStream, OutputStream outputStream,
-                      ExecutionContext executionContext)
-      throws IOException;
+      ExecutionContext executionContext) throws IOException;
 }

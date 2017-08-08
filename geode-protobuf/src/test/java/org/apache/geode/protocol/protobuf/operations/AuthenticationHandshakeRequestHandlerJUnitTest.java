@@ -36,9 +36,9 @@ public class AuthenticationHandshakeRequestHandlerJUnitTest extends OperationHan
   @Test
   public void respondsWithAuthenticationHandshakeResponseContainingAgreedUponMechanism() {
     when(authenticatorStub.handleHandshakeRequest(any())).thenReturn(Optional.of("PLAIN"));
-    AuthenticationAPI.AuthenticationHandshakeRequest
-        clientHandshakeRequest =
-        AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism("PLAIN").addMechanism("UnknownMechanismToServer").build();
+    AuthenticationAPI.AuthenticationHandshakeRequest clientHandshakeRequest =
+        AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism("PLAIN")
+            .addMechanism("UnknownMechanismToServer").build();
 
     Success<AuthenticationAPI.AuthenticationHandshakeResponse> result =
         (Success<AuthenticationAPI.AuthenticationHandshakeResponse>) operationHandler
@@ -48,17 +48,17 @@ public class AuthenticationHandshakeRequestHandlerJUnitTest extends OperationHan
     ArgumentCaptor<Collection> argumentCaptor = ArgumentCaptor.forClass(Collection.class);
     verify(authenticatorStub, times(1)).handleHandshakeRequest(argumentCaptor.capture());
     assertEquals(1, argumentCaptor.getAllValues().size());
-    assertArrayEquals(new String[]{"PLAIN", "UnknownMechanismToServer"}, argumentCaptor.getAllValues().get(0).toArray());
+    assertArrayEquals(new String[] {"PLAIN", "UnknownMechanismToServer"},
+        argumentCaptor.getAllValues().get(0).toArray());
   }
 
   @Test
   public void submitUnsupportedAuthenticationMechanism() {
     when(authenticatorStub.handleHandshakeRequest(any())).thenReturn(Optional.empty());
     String unknown_mechanism = "UnknownMechanismToServer";
-    AuthenticationAPI.AuthenticationHandshakeRequest
-        handshakeRequest =
-        AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder().addMechanism(
-            unknown_mechanism).build();
+    AuthenticationAPI.AuthenticationHandshakeRequest handshakeRequest =
+        AuthenticationAPI.AuthenticationHandshakeRequest.newBuilder()
+            .addMechanism(unknown_mechanism).build();
 
     Result result =
         operationHandler.process(serializationServiceStub, handshakeRequest, executionContext);
