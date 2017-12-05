@@ -70,10 +70,12 @@ public class HandshakeIntegrationTest {
 
     CacheServer cacheServer = cache.addCacheServer();
     int cacheServerPort = AvailablePortHelper.getRandomAvailableTCPPort();
+    int cacheServerProtobufPort = AvailablePortHelper.getRandomAvailableTCPPort();
     cacheServer.setPort(cacheServerPort);
+    cacheServer.setProtobufPort(cacheServerProtobufPort);
     cacheServer.start();
 
-    InetSocketAddress localhost = new InetSocketAddress("localhost", cacheServerPort);
+    InetSocketAddress localhost = new InetSocketAddress("localhost", cacheServerProtobufPort);
     socketChannel = SocketChannel.open(localhost);
 
     socket = socketChannel.socket();
@@ -94,7 +96,6 @@ public class HandshakeIntegrationTest {
 
   @Test
   public void testNormalHandshakeSucceeds() throws Exception {
-    outputStream.write(CommunicationMode.ProtobufClientServerProtocol.getModeNumber());
     outputStream.write(ConnectionAPI.MajorVersions.CURRENT_MAJOR_VERSION_VALUE);
 
     ClientProtocol.Message.newBuilder()
@@ -109,7 +110,6 @@ public class HandshakeIntegrationTest {
 
   @Test
   public void testInvalidMajorVersionBreaksConnection() throws Exception {
-    outputStream.write(CommunicationMode.ProtobufClientServerProtocol.getModeNumber());
     outputStream.write(ConnectionAPI.MajorVersions.INVALID_MAJOR_VERSION_VALUE);
 
     // Verify that connection is closed

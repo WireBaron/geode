@@ -16,6 +16,7 @@ package org.apache.geode.internal.cache.tier.sockets;
 
 import static org.apache.geode.distributed.ConfigurationProperties.SECURITY_CLIENT_ACCESSOR_PP;
 import static org.apache.geode.internal.cache.tier.CommunicationMode.ClientToServerForQueue;
+import static org.apache.geode.internal.cache.tier.CommunicationMode.InvalidCommunicationMode;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -307,6 +308,23 @@ public class AcceptorImpl implements Acceptor, Runnable, CommBufferPool {
   private final ServerConnectionFactory serverConnectionFactory;
 
   /**
+   * If using a locked communication mode, assume all incoming messages use the given mode
+   */
+  private final CommunicationMode lockedCommunicationMode;
+
+  public AcceptorImpl(int port, String bindHostName, boolean notifyBySubscription,
+      int socketBufferSize, int maximumTimeBetweenPings, InternalCache internalCache,
+      int maxConnections, int maxThreads, int maximumMessageCount, int messageTimeToLive,
+      ConnectionListener listener, List overflowAttributesList, boolean isGatewayReceiver,
+      List<GatewayTransportFilter> transportFilter, boolean tcpNoDelay,
+      ServerConnectionFactory serverConnectionFactory) throws IOException {
+    this(port, bindHostName, notifyBySubscription, socketBufferSize, maximumTimeBetweenPings,
+        internalCache, maxConnections, maxThreads, maximumMessageCount, messageTimeToLive, listener,
+        overflowAttributesList, isGatewayReceiver, transportFilter, tcpNoDelay,
+        serverConnectionFactory, CommunicationMode.InvalidCommunicationMode);
+  }
+
+  /**
    * Initializes this acceptor thread to listen for connections on the given port.
    *
    * @param port The port on which this acceptor listens for connections. If <code>0</code>, a
@@ -328,7 +346,8 @@ public class AcceptorImpl implements Acceptor, Runnable, CommBufferPool {
       int maxConnections, int maxThreads, int maximumMessageCount, int messageTimeToLive,
       ConnectionListener listener, List overflowAttributesList, boolean isGatewayReceiver,
       List<GatewayTransportFilter> transportFilter, boolean tcpNoDelay,
-      ServerConnectionFactory serverConnectionFactory) throws IOException {
+      ServerConnectionFactory serverConnectionFactory, CommunicationMode lockedCommunicationMode)
+      throws IOException {
     this.securityService = internalCache.getSecurityService();
     this.bindHostName = calcBindHostName(internalCache, bindHostName);
     this.connectionListener = listener == null ? new ConnectionListenerAdapter() : listener;
@@ -336,6 +355,7 @@ public class AcceptorImpl implements Acceptor, Runnable, CommBufferPool {
     this.isGatewayReceiver = isGatewayReceiver;
     this.gatewayTransportFilters = transportFilter;
     this.serverConnectionFactory = serverConnectionFactory;
+    this.lockedCommunicationMode = lockedCommunicationMode;
     {
       int tmp_maxConnections = maxConnections;
       if (tmp_maxConnections < MINIMUM_MAX_CONNECTIONS) {
@@ -1412,19 +1432,23 @@ public class AcceptorImpl implements Acceptor, Runnable, CommBufferPool {
     // for 'server to client' communication, send it to the CacheClientNotifier
     // for processing.
     final CommunicationMode communicationMode;
-    try {
-      if (isSelector()) {
-        communicationMode = getCommunicationModeForSelector(socket);
-      } else {
-        communicationMode = getCommunicationModeForNonSelector(socket);
-      }
-      socket.setTcpNoDelay(this.tcpNoDelay);
+    if (lockedCommunicationMode != InvalidCommunicationMode) {
+      communicationMode = lockedCommunicationMode;
+    } else {
+      try {
+        if (isSelector()) {
+          communicationMode = getCommunicationModeForSelector(socket);
+        } else {
+          communicationMode = getCommunicationModeForNonSelector(socket);
+        }
+        socket.setTcpNoDelay(this.tcpNoDelay);
 
-    } catch (IllegalArgumentException e) {
-      // possible if a client uses SSL & the server isn't configured to use SSL,
-      // or if an invalid communication communication mode byte is sent.
-      logger.warn("Error processing client connection", e);
-      throw new EOFException();
+      } catch (IllegalArgumentException e) {
+        // possible if a client uses SSL & the server isn't configured to use SSL,
+        // or if an invalid communication communication mode byte is sent.
+        logger.warn("Error processing client connection", e);
+        throw new EOFException();
+      }
     }
 
     if (communicationMode.isSubscriptionFeed()) {

@@ -49,6 +49,9 @@ public abstract class AbstractCacheServer implements InternalCacheServer {
   /** The port that the bridge server was configured to run on */
   protected int port;
 
+  /** The port that the bridge server was configured to run on for protobuf messages */
+  protected int protobufPort;
+
   /** The maximum number of connections that the BridgeServer will accept */
   protected int maxConnections;
 
@@ -131,6 +134,7 @@ public abstract class AbstractCacheServer implements InternalCacheServer {
   public AbstractCacheServer(InternalCache cache, boolean attachListener) {
     this.cache = cache;
     this.port = Integer.getInteger(TEST_OVERRIDE_DEFAULT_PORT_PROPERTY, CacheServer.DEFAULT_PORT);
+    this.protobufPort = CacheServer.DEFAULT_PROTOBUF_PORT;
     this.maxConnections = CacheServer.DEFAULT_MAX_CONNECTIONS;
     this.maxThreads = CacheServer.DEFAULT_MAX_THREADS;
     this.socketBufferSize = CacheServer.DEFAULT_SOCKET_BUFFER_SIZE;
@@ -219,6 +223,14 @@ public abstract class AbstractCacheServer implements InternalCacheServer {
 
   public void setPort(int port) {
     this.port = port;
+  }
+
+  public int getProtobufPort() {
+    return this.protobufPort;
+  }
+
+  public void setProtobufPort(int port) {
+    this.protobufPort = port;
   }
 
   public String getBindAddress() {
@@ -363,6 +375,7 @@ public abstract class AbstractCacheServer implements InternalCacheServer {
    */
   public boolean sameAs(CacheServer other) {
     return getPort() == other.getPort() && eq(getBindAddress(), other.getBindAddress())
+        && getProtobufPort() == other.getProtobufPort()
         && getSocketBufferSize() == other.getSocketBufferSize()
         && getMaximumTimeBetweenPings() == other.getMaximumTimeBetweenPings()
         && getNotifyBySubscription() == other.getNotifyBySubscription()

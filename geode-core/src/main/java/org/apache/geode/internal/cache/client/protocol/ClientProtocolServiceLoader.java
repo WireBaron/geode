@@ -56,4 +56,8 @@ public class ClientProtocolServiceLoader {
     }
     return clientProtocolService;
   }
+
+  public ClientProtocolService lookupLatestService() {
+    return clientProtocolServices.get(0);
+  }
 }

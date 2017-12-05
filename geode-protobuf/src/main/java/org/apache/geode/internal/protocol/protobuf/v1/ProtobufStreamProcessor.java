@@ -67,6 +67,12 @@ public class ProtobufStreamProcessor implements ClientProtocolMessageHandler {
       logger.debug(errorMessage);
       throw new EOFException(errorMessage);
     }
+    ClientProtocol.Message responseMessage = handleMessage(message, executionContext);
+    protobufProtocolSerializer.serialize(responseMessage, outputStream);
+  }
+
+  public ClientProtocol.Message handleMessage(ClientProtocol.Message message,
+      MessageExecutionContext executionContext) {
     ProtocolClientStatistics statistics = executionContext.getStatistics();
     statistics.messageReceived(message.getSerializedSize());
 
@@ -74,6 +80,6 @@ public class ProtobufStreamProcessor implements ClientProtocolMessageHandler {
     ClientProtocol.Response response = protobufOpsProcessor.process(request, executionContext);
     ClientProtocol.Message responseMessage = ProtobufUtilities.createProtobufResponse(response);
     statistics.messageSent(responseMessage.getSerializedSize());
-    protobufProtocolSerializer.serialize(responseMessage, outputStream);
+    return responseMessage;
   }
 }

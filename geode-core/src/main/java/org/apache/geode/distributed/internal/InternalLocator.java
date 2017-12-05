@@ -62,6 +62,8 @@ import org.apache.geode.distributed.internal.tcpserver.TcpServer;
 import org.apache.geode.internal.admin.remote.DistributionLocatorId;
 import org.apache.geode.internal.cache.GemFireCacheImpl;
 import org.apache.geode.internal.cache.InternalCache;
+import org.apache.geode.internal.cache.client.protocol.ClientProtocolService;
+import org.apache.geode.internal.cache.client.protocol.ClientProtocolServiceLoader;
 import org.apache.geode.internal.cache.tier.sockets.TcpServerFactory;
 import org.apache.geode.internal.cache.wan.WANServiceProvider;
 import org.apache.geode.internal.i18n.LocalizedStrings;
@@ -183,6 +185,7 @@ public class InternalLocator extends Locator implements ConnectListener {
   private volatile boolean isSharedConfigurationStarted = false;
 
   private volatile Thread restartThread;
+  private int protobufPort;
 
   boolean isSharedConfigurationEnabled() {
     return this.config.getEnableClusterConfiguration();
@@ -404,6 +407,20 @@ public class InternalLocator extends Locator implements ConnectListener {
       // InternalDistributedSystem
       InetAddress bindAddress, String hostnameForClients, Properties distributedSystemProperties,
       DistributionConfigImpl cfg, boolean startDistributedSystem) {
+    this(port, logF, stateF, logWriter, securityLogWriter, bindAddress, hostnameForClients,
+        distributedSystemProperties, cfg, startDistributedSystem,
+        distributedSystemProperties.contains("TEST_protobuf_port")
+            ? Integer.valueOf(distributedSystemProperties.getProperty("TEST_protobuf_port")) : 0);
+  }
+
+  private InternalLocator(int port, File logF, File stateF, InternalLogWriter logWriter,
+      // LOG: 3 non-null sources: GemFireDistributionLocator, InternalDistributedSystem,
+      // LocatorLauncher
+      InternalLogWriter securityLogWriter,
+      // LOG: 1 non-null source: GemFireDistributionLocator(same instance as logWriter),
+      // InternalDistributedSystem
+      InetAddress bindAddress, String hostnameForClients, Properties distributedSystemProperties,
+      DistributionConfigImpl cfg, boolean startDistributedSystem, int protobufPort) {
 
     // TODO: the following three assignments are already done in superclass
     this.logFile = logF;
@@ -499,6 +516,18 @@ public class InternalLocator extends Locator implements ConnectListener {
 
     this.server = new TcpServerFactory().makeTcpServer(port, this.bindAddress, null, this.config,
         this.handler, new DelayedPoolStatHelper(), group, this.toString(), this);
+
+    if (this.protobufPort != 0) {
+      startupProtobufServer(protobufPort);
+    }
+  }
+
+  public void startupProtobufServer(int protobufPort) {
+    this.protobufPort = protobufPort;
+    ClientProtocolServiceLoader clientProtocolServiceLoader = new ClientProtocolServiceLoader();
+    ClientProtocolService clientProtocolService = clientProtocolServiceLoader.lookupLatestService();
+    clientProtocolService.initializeStatistics("LocatorStats", getDistributedSystem());
+    clientProtocolService.createNettyServerForLocator(protobufPort, this, null);
   }
 
   // Reset the file names with the correct port number if startLocatorAndDS was called with port
@@ -1115,6 +1144,11 @@ public class InternalLocator extends Locator implements ConnectListener {
       return this.server.getPort();
     }
     return null;
+  }
+
+  @Override
+  public int getProtobufPort() {
+    return protobufPort;
   }
 
   class FetchSharedConfigStatus implements Callable<SharedConfigurationStatusResponse> {

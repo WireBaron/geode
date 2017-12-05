@@ -66,6 +66,7 @@ import org.apache.geode.internal.admin.ClientHealthMonitoringRegion;
 import org.apache.geode.internal.cache.CacheServerAdvisor.CacheServerProfile;
 import org.apache.geode.internal.cache.ha.HARegionQueue;
 import org.apache.geode.internal.cache.tier.Acceptor;
+import org.apache.geode.internal.cache.tier.CommunicationMode;
 import org.apache.geode.internal.cache.tier.sockets.AcceptorImpl;
 import org.apache.geode.internal.cache.tier.sockets.CacheClientNotifier;
 import org.apache.geode.internal.cache.tier.sockets.ClientProxyMembershipID;
@@ -101,6 +102,7 @@ public class CacheServerImpl extends AbstractCacheServer implements Distribution
 
   /** The acceptor that does the actual serving */
   private volatile AcceptorImpl acceptor;
+  private volatile AcceptorImpl protobufAcceptor;
 
   /**
    * The advisor used by this cache server.
@@ -185,6 +187,21 @@ public class CacheServerImpl extends AbstractCacheServer implements Distribution
   public void setPort(int port) {
     checkRunning();
     super.setPort(port);
+  }
+
+  @Override
+  public int getProtobufPort() {
+    if (this.protobufAcceptor != null) {
+      return this.protobufAcceptor.getPort();
+    } else {
+      return super.getProtobufPort();
+    }
+  }
+
+  @Override
+  public void setProtobufPort(int port) {
+    checkRunning();
+    super.setProtobufPort(port);
   }
 
   @Override
@@ -292,6 +309,7 @@ public class CacheServerImpl extends AbstractCacheServer implements Distribution
    */
   public void configureFrom(CacheServer other) {
     setPort(other.getPort());
+    setProtobufPort(other.getProtobufPort());
     setBindAddress(other.getBindAddress());
     setHostnameForClients(other.getHostnameForClients());
     setMaxConnections(other.getMaxConnections());
@@ -356,6 +374,17 @@ public class CacheServerImpl extends AbstractCacheServer implements Distribution
         this.tcpNoDelay, serverConnectionFactory);
 
     this.acceptor.start();
+
+    if (getProtobufPort() != 0) {
+      this.protobufAcceptor = new AcceptorImpl(getProtobufPort(), getBindAddress(),
+          getNotifyBySubscription(), getSocketBufferSize(), getMaximumTimeBetweenPings(),
+          this.cache, getMaxConnections(), getMaxThreads(), getMaximumMessageCount(),
+          getMessageTimeToLive(), this.loadMonitor, overflowAttributesList, this.isGatewayReceiver,
+          this.gatewayTransportFilters, this.tcpNoDelay, serverConnectionFactory,
+          CommunicationMode.ProtobufClientServerProtocol);
+      this.protobufAcceptor.start();
+    }
+
     this.advisor.handshake();
     this.loadMonitor.start(new ServerLocation(getExternalAddress(), getPort()),
         acceptor.getStats());
@@ -464,6 +493,17 @@ public class CacheServerImpl extends AbstractCacheServer implements Distribution
     } catch (RuntimeException e) {
       logger.warn(LocalizedMessage
           .create(LocalizedStrings.CacheServerImpl_CACHESERVER_ERROR_CLOSING_ACCEPTOR_MONITOR), e);
+      if (firstException != null) {
+        firstException = e;
+      }
+    }
+
+    try {
+      if (this.protobufAcceptor != null) {
+        this.protobufAcceptor.close();
+      }
+    } catch (RuntimeException e) {
+      logger.warn("CacheServer - Error closing protobuf acceptor monitor", e);
       if (firstException != null) {
         firstException = e;
       }

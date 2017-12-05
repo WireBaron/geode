@@ -14,9 +14,12 @@
  */
 package org.apache.geode.internal.protocol.protobuf.v1;
 
+import java.io.IOException;
+
 import org.apache.geode.StatisticsFactory;
 import org.apache.geode.cache.Cache;
 import org.apache.geode.distributed.internal.InternalLocator;
+import org.apache.geode.internal.admin.SSLConfig;
 import org.apache.geode.internal.cache.client.protocol.ClientProtocolProcessor;
 import org.apache.geode.internal.cache.client.protocol.ClientProtocolService;
 import org.apache.geode.internal.protocol.protobuf.statistics.ProtobufClientStatisticsImpl;
@@ -58,6 +61,19 @@ public class ProtobufProtocolService implements ClientProtocolService {
   @Override
   public ClientProtocolProcessor createProcessorForLocator(InternalLocator locator) {
     return new ProtobufLocatorPipeline(protobufStreamProcessor, getStatistics(), locator);
+  }
+
+  @Override
+  public void createNettyServerForLocator(int port, InternalLocator locator, SSLConfig sslConfig) {
+    ProtobufNettyServer protobufNettyServer =
+        new ProtobufNettyServer(port, sslConfig, locator, statistics, protobufStreamProcessor);
+    try {
+      protobufNettyServer.run();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override

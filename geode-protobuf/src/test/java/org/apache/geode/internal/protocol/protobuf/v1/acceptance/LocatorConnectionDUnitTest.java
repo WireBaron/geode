@@ -34,6 +34,8 @@ import org.apache.geode.cache.server.CacheServer;
 import org.apache.geode.distributed.ConfigurationProperties;
 import org.apache.geode.distributed.Locator;
 import org.apache.geode.distributed.internal.InternalDistributedSystem;
+import org.apache.geode.distributed.internal.InternalLocator;
+import org.apache.geode.internal.AvailablePortHelper;
 import org.apache.geode.internal.cache.InternalCache;
 import org.apache.geode.internal.protocol.ProtocolErrorCode;
 import org.apache.geode.internal.protocol.exception.InvalidProtocolMessageException;
@@ -60,23 +62,29 @@ public class LocatorConnectionDUnitTest extends JUnit4CacheTestCase {
   @Rule
   public final DistributedRestoreSystemProperties restoreSystemProperties =
       new DistributedRestoreSystemProperties();
+  private int locatorPort;
 
   @Before
   public void setup() throws IOException {
     Host.getLocator().invoke(() -> System.setProperty("geode.feature-protobuf-protocol", "true"));
+    locatorPort = AvailablePortHelper.getRandomAvailableTCPPort();
+    Host.getLocator().invoke(() -> InternalLocator.getLocator().startupProtobufServer(locatorPort));
 
     startCacheWithCacheServer();
   }
 
   private Socket createSocket() throws IOException {
     Host host = Host.getHost(0);
-    int locatorPort = DistributedTestUtils.getDUnitLocatorPort();
+    // int locatorPort = DistributedTestUtils.getDUnitLocatorPort();
     Socket socket = new Socket(host.getHostName(), locatorPort);
-    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-    dataOutputStream.writeInt(0);
-    // Using the constant from AcceptorImpl to ensure that magic byte is the same
-    dataOutputStream.writeByte(ProtobufClientServerProtocol.getModeNumber());
-    dataOutputStream.writeByte(ConnectionAPI.MajorVersions.CURRENT_MAJOR_VERSION_VALUE);
+    // DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+    // System.out.println("AAA");
+    // dataOutputStream.writeInt(0);
+    // // Using the constant from AcceptorImpl to ensure that magic byte is the same
+    // System.out.println("BBB");
+    // dataOutputStream.writeByte(ProtobufClientServerProtocol.getModeNumber());
+    // System.out.println("CCC");
+    // dataOutputStream.writeByte(ConnectionAPI.MajorVersions.CURRENT_MAJOR_VERSION_VALUE);
     return socket;
   }
 
@@ -93,7 +101,7 @@ public class LocatorConnectionDUnitTest extends JUnit4CacheTestCase {
 
     testSocketWithStats(getAvailableServersRequestMessage, protobufProtocolSerializer);
 
-    testSocketWithStats(getAvailableServersRequestMessage, protobufProtocolSerializer);
+    // testSocketWithStats(getAvailableServersRequestMessage, protobufProtocolSerializer);
   }
 
   private void testSocketWithStats(ClientProtocol.Message getAvailableServersRequestMessage,
@@ -117,7 +125,7 @@ public class LocatorConnectionDUnitTest extends JUnit4CacheTestCase {
       validateStats(messagesReceived + 1, messagesSent + 1,
           bytesReceived + getAvailableServersRequestMessage.getSerializedSize(),
           bytesSent + getAvailableServersResponseMessage.getSerializedSize(),
-          clientConnectionStarts, clientConnectionTerminations + 1);
+          clientConnectionStarts, clientConnectionTerminations);
     }
   }
 
@@ -158,7 +166,7 @@ public class LocatorConnectionDUnitTest extends JUnit4CacheTestCase {
       validateStats(messagesReceived + 1, messagesSent + 1,
           bytesReceived + getRegionNamesRequestMessage.getSerializedSize(),
           bytesSent + getAvailableServersResponseMessage.getSerializedSize(),
-          clientConnectionStarts, clientConnectionTerminations + 1);
+          clientConnectionStarts, clientConnectionTerminations);
     }
     ignoredInvalidExecutionContext.remove();
   }

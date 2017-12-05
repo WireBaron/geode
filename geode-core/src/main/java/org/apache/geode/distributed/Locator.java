@@ -436,4 +436,5 @@ public abstract class Locator {
     org.apache.geode.internal.DistributionLocator.main(args);
   }
 
+  public abstract int getProtobufPort();
 }

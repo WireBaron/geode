@@ -23,6 +23,10 @@ package org.apache.geode.internal.cache.tier;
  */
 public enum CommunicationMode {
   /**
+   * Sentinel value for invalid mode
+   */
+  InvalidCommunicationMode((byte) 0, "invalid"),
+  /**
    * Byte meaning that the Socket is being used for 'client to server' communication.
    */
   ClientToServer((byte) 100, "client"),

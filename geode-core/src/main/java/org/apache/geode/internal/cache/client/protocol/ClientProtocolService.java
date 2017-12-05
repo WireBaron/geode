@@ -18,6 +18,7 @@ package org.apache.geode.internal.cache.client.protocol;
 import org.apache.geode.StatisticsFactory;
 import org.apache.geode.cache.Cache;
 import org.apache.geode.distributed.internal.InternalLocator;
+import org.apache.geode.internal.admin.SSLConfig;
 import org.apache.geode.internal.security.SecurityService;
 
 /**
@@ -38,6 +39,8 @@ public interface ClientProtocolService {
    * Create a locator processor. The locator does not currently provide any authentication.
    */
   ClientProtocolProcessor createProcessorForLocator(InternalLocator locator);
+
+  void createNettyServerForLocator(int port, InternalLocator locator, SSLConfig sslConfig);
 
   int getServiceProtocolVersion();
 }

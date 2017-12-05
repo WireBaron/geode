@@ -40,6 +40,11 @@ public interface CacheServer {
   public static final int DEFAULT_PORT = 40404;
 
   /**
+   * Protobuf default communication port, 0 will keep the server from starting a protobuf listener
+   */
+  public static final int DEFAULT_PROTOBUF_PORT = 0;
+
+  /**
    * The default number of sockets accepted by a CacheServer. When the maximum is reached the cache
    * server will stop accepting new connections. Current value: 800
    *
@@ -146,6 +151,20 @@ public interface CacheServer {
    * @throws IllegalStateException If this cache server is running
    */
   public void setPort(int port);
+
+  /**
+   * Returns the port on which this cache server listens for clients.
+   */
+  public default int getProtobufPort() {
+    return DEFAULT_PROTOBUF_PORT;
+  }
+
+  /**
+   * Sets the port on which this cache server listens for clients.
+   *
+   * @throws IllegalStateException If this cache server is running
+   */
+  public void setProtobufPort(int port);
 
   /**
    * Returns a string representing the ip address or host name that this cache server will listen
