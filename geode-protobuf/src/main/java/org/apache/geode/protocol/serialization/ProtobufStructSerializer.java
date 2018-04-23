@@ -55,7 +55,7 @@ public class ProtobufStructSerializer implements ValueSerializer {
     return structBuilder.build();
   }
 
-  private Value serializeValue(Object value) {
+  Value serializeValue(Object value) {
     Value.Builder builder = Value.newBuilder();
     if (value instanceof String) {
       builder.setEncodedValue(
@@ -100,7 +100,7 @@ public class ProtobufStructSerializer implements ValueSerializer {
     return deserialize(struct);
   }
 
-  private Object deserialize(Struct struct) {
+  Object deserialize(Struct struct) {
     PdxInstanceFactory pdxInstanceFactory = cache.createPdxInstanceFactory(PROTOBUF_STRUCT);
 
     for (Map.Entry<String, Value> field : struct.getFieldsMap().entrySet()) {

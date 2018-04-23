@@ -46,6 +46,10 @@ public class ProtobufSerializationService implements SerializationService<BasicT
     this.serializer = valueSerializer;
   }
 
+  public ValueSerializer getValueSerializer() {
+    return serializer;
+  }
+
   /**
    * @param value the value to be encoded
    *

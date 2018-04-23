@@ -81,6 +81,9 @@ message Message {
 
         PutIfAbsentRequest putIfAbsentRequest = 34;
         PutIfAbsentResponse putIfAbsentResponse = 35;
+
+        RegisterTypeRequest registerTypeRequest = 36;
+        RegisterTypeResponse registerTypeResponse = 37;
     }
 }
 

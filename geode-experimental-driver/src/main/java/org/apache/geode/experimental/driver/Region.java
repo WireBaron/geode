@@ -16,6 +16,7 @@ package org.apache.geode.experimental.driver;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -102,4 +103,7 @@ public interface Region<K, V> {
    * @return Set of keys in this region
    */
   Set<K> keySet() throws IOException;
+
+  // TODO: not this
+  int registerType(List<String> fieldNames) throws IOException;
 }

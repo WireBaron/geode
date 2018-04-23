@@ -25,11 +25,17 @@ message Struct {
   map<string, Value> fields = 1;
 }
 
+message TypedStruct {
+  int32 typeId = 1;
+  repeated Value fields = 2;
+}
+
 message Value {
   oneof kind {
     EncodedValue encodedValue = 1;
     Struct structValue = 2;
-    ListValue listValue = 3;
+    TypedStruct typedStructValue = 3;
+    ListValue listValue = 4;
   }
 }
 

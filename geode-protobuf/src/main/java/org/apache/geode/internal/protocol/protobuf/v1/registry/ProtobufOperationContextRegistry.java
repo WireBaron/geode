@@ -38,6 +38,7 @@ import org.apache.geode.internal.protocol.protobuf.v1.operations.OqlQueryRequest
 import org.apache.geode.internal.protocol.protobuf.v1.operations.PutAllRequestOperationHandler;
 import org.apache.geode.internal.protocol.protobuf.v1.operations.PutIfAbsentRequestOperationHandler;
 import org.apache.geode.internal.protocol.protobuf.v1.operations.PutRequestOperationHandler;
+import org.apache.geode.internal.protocol.protobuf.v1.operations.RegisterTypeHandler;
 import org.apache.geode.internal.protocol.protobuf.v1.operations.RemoveRequestOperationHandler;
 import org.apache.geode.internal.protocol.protobuf.v1.operations.security.HandshakeRequestOperationHandler;
 
@@ -139,6 +140,11 @@ public class ProtobufOperationContextRegistry {
         new ProtobufOperationContext<>(ClientProtocol.Message::getPutIfAbsentRequest,
             new PutIfAbsentRequestOperationHandler(),
             opsResp -> ClientProtocol.Message.newBuilder().setPutIfAbsentResponse(opsResp)));
+
+    operationContexts.put(MessageTypeCase.REGISTERTYPEREQUEST,
+        new ProtobufOperationContext<>(ClientProtocol.Message::getRegisterTypeRequest,
+            new RegisterTypeHandler(),
+            opsResp -> ClientProtocol.Message.newBuilder().setRegisterTypeResponse(opsResp)));
 
     return operationContexts;
   }

@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -185,5 +186,16 @@ public class ProtobufRegion<K, V> implements Region<K, V> {
       keys.add((K) valueEncoder.decodeValue(value));
     }
     return keys;
+  }
+
+  @Override
+  public int registerType(List<String> fieldNames) throws IOException {
+    final Message request = Message.newBuilder().setRegisterTypeRequest(
+        RegionAPI.RegisterTypeRequest.newBuilder().addAllFieldNames(fieldNames)).build();
+    final Message message =
+        protobufChannel.sendRequest(request, MessageTypeCase.REGISTERTYPERESPONSE);
+    final RegionAPI.RegisterTypeResponse typeResponse = message.getRegisterTypeResponse();
+
+    return typeResponse.getTypeId();
   }
 }

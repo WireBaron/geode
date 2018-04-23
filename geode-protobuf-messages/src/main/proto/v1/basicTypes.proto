@@ -33,6 +33,11 @@ message EncodedValueList {
   repeated EncodedValue element = 1;
 }
 
+message EncodedType {
+    int32 typeid = 1;
+    repeated EncodedValue fieldValues = 2;
+}
+
 //Represents a table, such as the results of
 //an OQL query. The field names and all rows
 //should have the same number of elements.

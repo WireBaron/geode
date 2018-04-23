@@ -124,3 +124,11 @@ message ClearRequest {
 
 message ClearResponse {
 }
+
+message RegisterTypeRequest {
+    repeated string fieldNames = 1;
+}
+
+message RegisterTypeResponse {
+    int32 typeId = 1;
+}
