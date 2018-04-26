@@ -27,7 +27,7 @@ message Struct {
 
 message TypedStruct {
   int32 typeId = 1;
-  repeated Value fields = 2;
+  repeated EncodedValue fields = 2;
 }
 
 message Value {
