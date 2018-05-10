@@ -67,6 +67,81 @@ message EncodedValue {
     }
 }
 
+/////////////
+
+message EnhancedEntry {
+    EnhancedEncodedValue key = 1;
+    EnhancedEncodedValue value = 2;
+}
+
+message EnhancedEncodedValue {
+    oneof value {
+        int32 byte = 1;
+        bool boolean = 2;
+        int32 character = 3;
+        int32 short = 4;
+        int32 integer = 5;
+        int64 long = 6;
+        float float = 7;
+        double double = 8;
+        string string = 9;
+        int64 date = 10;
+        bytes byteArray = 11;
+        VarIntArray booleanArray = 12;
+        VarIntArray charArray = 13;
+        VarIntArray shortArray = 14;
+        VarIntArray intArray = 15;
+        VarIntArray longArray = 16;
+        FloatArray floatArray = 17;
+        DoubleArray doubleArray = 18;
+        StringArray stringArray = 19;
+        ByteArrayArray byteArrayArray = 20;
+        ByteArrayArray objectArray = 21;
+        ValueMap map = 22;
+        ValueArray list = 23;
+        ValueArray set = 24;
+        EncodedObject object = 25;
+        google.protobuf.NullValue null = 26;
+    }
+}
+
+message VarIntArray {
+    repeated int64 values = 1;  // Note that any integer type is encoded the exact same in protobuf
+}
+
+message FloatArray {
+    repeated float values = 1;
+}
+
+message DoubleArray {
+    repeated double values = 1;
+}
+
+message StringArray {
+    repeated string values = 1;
+}
+
+message ByteArrayArray {
+    repeated bytes values = 1;
+}
+
+message ValueArray {
+    repeated EnhancedEncodedValue values = 1;
+}
+
+message ValueMap {
+    repeated EnhancedEncodedValue keys = 1;
+    repeated EnhancedEncodedValue values = 2;
+}
+
+message EncodedObject {
+    string className = 3;
+    repeated string fieldNames = 1;
+    repeated EnhancedEncodedValue fieldValues = 2;
+}
+
+////////////////
+
 message Server {
     string hostname = 1;
     int32 port = 2;
