@@ -56,9 +56,11 @@ public class ProtobufDriver implements Driver {
    */
   ProtobufDriver(Set<InetSocketAddress> locators, String username, String password,
       String keyStorePath, String trustStorePath, String protocols, String ciphers,
-      ValueSerializer serializer) throws GeneralSecurityException, IOException {
+      ValueSerializer serializer, int maxServerConnections, int minServerConnections,
+      int serverConnectionReapingInterval) throws GeneralSecurityException, IOException {
     this.channel = new ProtobufChannel(locators, username, password, keyStorePath, trustStorePath,
-        protocols, ciphers, serializer);
+        protocols, ciphers, serializer, maxServerConnections, minServerConnections,
+        serverConnectionReapingInterval);
     this.valueEncoder = new ValueEncoder(serializer);
   }
 
