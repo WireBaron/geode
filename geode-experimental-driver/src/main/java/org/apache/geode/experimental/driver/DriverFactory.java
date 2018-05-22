@@ -68,6 +68,21 @@ public class DriverFactory {
   private String ciphers;
 
   /**
+   * Maximum number of connections to open to a server
+   */
+  private int maxServerConnections = 10;
+
+  /**
+   * Minimum number of connections to shrink down to in low traffic
+   */
+  int minServerConnections = 1;
+
+  /**
+   * How many seconds to wait before reaping underutilized connections
+   */
+  int serverConnectionReapingInterval = 60;
+
+  /**
    * Adds a locator at <code>host</code> and <code>port</code> to the set of locators to use.
    *
    * @param host Internet address or host name.
@@ -146,13 +161,48 @@ public class DriverFactory {
   }
 
   /**
+   * Specifies the maximum number of server connections to allow.
+   *
+   * @param connections Maximum amount of connections to a server
+   * @return This driver factory.
+   */
+  public DriverFactory setMaxConnections(int connections) {
+    maxServerConnections = connections;
+    return this;
+  }
+
+  /**
+   * Specifies the minimum number of server connections to try to maintain.
+   *
+   * @param connections Minimum amount of connections to a server
+   * @return This driver factory.
+   */
+  public DriverFactory setMinConnections(int connections) {
+    minServerConnections = connections;
+    return this;
+  }
+
+  /**
+   * Specifies how long before underutilized connections will be closed while more than
+   * minServerConnections are open.
+   *
+   * @param interval Number of seconds after which a connection will be closed if not used
+   * @return This driver factory.
+   */
+  public DriverFactory setConnectionReapingInterval(int interval) {
+    serverConnectionReapingInterval = interval;
+    return this;
+  }
+
+  /**
    * Creates a driver configured to use all the locators about which this driver factory knows.
    *
    * @return New driver.
    */
   public Driver create() throws Exception {
     return new ProtobufDriver(locators, username, password, keyStorePath, trustStorePath, protocols,
-        ciphers, serializer);
+        ciphers, serializer, maxServerConnections, minServerConnections,
+        serverConnectionReapingInterval);
   }
 
   public DriverFactory setValueSerializer(ValueSerializer serializer) {
