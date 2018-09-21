@@ -212,6 +212,7 @@ public class GMSLocator implements Locator, NetLocator {
 
   private FindCoordinatorResponse processFindCoordinatorRequest(
       FindCoordinatorRequest findRequest) {
+    logger.info("!!! Handling findCoordinatorRequest");
     findServices();
     if (!findRequest.getDHAlgo().equals(securityUDPDHAlgo)) {
       return new FindCoordinatorResponse(

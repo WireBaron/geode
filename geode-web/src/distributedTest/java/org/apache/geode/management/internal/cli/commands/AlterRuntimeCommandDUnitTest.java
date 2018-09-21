@@ -47,7 +47,7 @@ import org.apache.geode.test.junit.rules.GfshCommandRule;
 @RunWith(JUnitParamsRunner.class)
 public class AlterRuntimeCommandDUnitTest {
   @Rule
-  public ClusterStartupRule startupRule = new ClusterStartupRule().withLogFile();
+  public ClusterStartupRule startupRule = new ClusterStartupRule();//.withLogFile();
 
   @Rule
   public GfshCommandRule gfsh = new GfshCommandRule();
@@ -257,7 +257,6 @@ public class AlterRuntimeCommandDUnitTest {
   @Test
   @Parameters({"true", "false"})
   public void alterLogDiskSpaceLimitOnGroup_OK(final boolean connectOverHttp) throws Exception {
-
     Properties props = new Properties();
     props.setProperty(LOG_LEVEL, "error");
     MemberVM locator =
@@ -456,12 +455,13 @@ public class AlterRuntimeCommandDUnitTest {
   }
 
   @Test
-  @Parameters({"true", "false"})
-  public void alterStatArchiveFileWithMember_updatesSelectedServerConfigs(
-      final boolean connectOverHttp) throws Exception {
-
+  // @Parameters({"true", "false"})
+  // public void alterStatArchiveFileWithMember_updatesSelectedServerConfigs(
+  // final boolean connectOverHttp) throws Exception {
+  public void alterStatArchiveFileWithMember_updatesSelectedServerConfigs() throws Exception {
+    final boolean connectOverHttp = true;
     Properties props = new Properties();
-    props.setProperty(LOG_LEVEL, "error");
+    props.setProperty(LOG_LEVEL, "info");
     MemberVM locator =
         startupRule.startLocatorVM(0, l -> l.withHttpService().withProperties(props));
     MemberVM server1 = startupRule.startServerVM(1, props, locator.getPort());
