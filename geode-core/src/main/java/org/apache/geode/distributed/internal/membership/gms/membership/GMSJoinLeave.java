@@ -343,6 +343,7 @@ public class GMSJoinLeave implements JoinLeave, MessageHandler {
               state.alreadyTried.add(state.possibleCoordinator);
             }
             if (System.currentTimeMillis() > giveupTime) {
+              logger.error("1. Unable to reach coordinator after " + timeout + "ms, " + tries + " attempts made.");
               break;
             }
           }
@@ -351,11 +352,13 @@ public class GMSJoinLeave implements JoinLeave, MessageHandler {
           if (state.locatorsContacted <= 0) {
             if (now > locatorGiveUpTime) {
               // break out of the loop and return false
+              logger.error("2. Unable to contact locator after " + locatorWaitTime + "ms, " + tries + " attempts made.");
               break;
             }
             tries = 0;
             giveupTime = now + timeout;
           } else if (now > giveupTime) {
+            logger.error("3. Unable to find contacted locator after " + timeout + "ms, " + tries + " attempts made.");
             break;
           }
         }
@@ -375,6 +378,7 @@ public class GMSJoinLeave implements JoinLeave, MessageHandler {
           }
         } catch (InterruptedException e) {
           logger.debug("retry sleep interrupted - giving up on joining the distributed system");
+          logger.error("4. retry sleep interrupted - giving up on joining the distributed system");
           return false;
         }
       } // for

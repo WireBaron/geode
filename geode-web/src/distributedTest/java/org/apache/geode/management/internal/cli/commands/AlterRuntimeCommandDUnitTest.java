@@ -461,7 +461,7 @@ public class AlterRuntimeCommandDUnitTest {
   public void alterStatArchiveFileWithMember_updatesSelectedServerConfigs() throws Exception {
     final boolean connectOverHttp = true;
     Properties props = new Properties();
-    props.setProperty(LOG_LEVEL, "info");
+    props.setProperty(LOG_LEVEL, "warn");
     MemberVM locator =
         startupRule.startLocatorVM(0, l -> l.withHttpService().withProperties(props));
     MemberVM server1 = startupRule.startServerVM(1, props, locator.getPort());
